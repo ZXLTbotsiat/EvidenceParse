@@ -46,6 +46,9 @@ h1 { margin: 0; font-size: clamp(54px, 7vw, 104px); line-height: .86; letter-spa
 button { border: 1px solid var(--ink); background: var(--ink); color: var(--paper); padding: 15px 18px; font-weight: 800; cursor: pointer; }
 button:hover:not(:disabled) { background: var(--forest); }
 button:disabled { opacity: .35; cursor: not-allowed; }
+.api-key-field { display: flex; flex-direction: column; gap: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.api-key-field small { font-weight: 500; opacity: .62; text-transform: none; letter-spacing: 0; }
+.api-key-field input { border: 1px solid var(--ink); background: rgba(255,255,255,.45); color: var(--ink); padding: 11px; font: inherit; }
 .principle { border-top: 1px solid var(--line); padding-top: 17px; font-size: 13px; line-height: 1.5; }
 .principle span { display: block; font-weight: 900; color: var(--danger); margin-bottom: 4px; }
 .error { color: var(--danger); font-weight: 700; }

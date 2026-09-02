@@ -76,6 +76,11 @@ export default function Home() {
   const [reviewer, setReviewer] = useState("");
   const [reviewReason, setReviewReason] = useState("");
   const [savingReview, setSavingReview] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+
+  function apiHeaders(extra: Record<string, string> = {}) {
+    return apiKey ? { ...extra, "X-API-Key": apiKey } : extra;
+  }
 
   const correctionTargets: CorrectionTarget[] = result
     ? [
@@ -105,6 +110,7 @@ export default function Home() {
     try {
       const response = await fetch(`${API_URL}/api/v1/documents/parse`, {
         method: "POST",
+        headers: apiHeaders(),
         body,
       });
       const payload = await response.json();
@@ -126,7 +132,9 @@ export default function Home() {
   }
 
   async function loadEvents(documentId: string) {
-    const response = await fetch(`${API_URL}/api/v1/documents/${documentId}/review-events`);
+    const response = await fetch(`${API_URL}/api/v1/documents/${documentId}/review-events`, {
+      headers: apiHeaders(),
+    });
     if (response.ok) setEvents(await response.json());
   }
 
@@ -139,7 +147,7 @@ export default function Home() {
         `${API_URL}/api/v1/documents/${result.document_id}/corrections`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: apiHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({
             field_path: correctionPath,
             value: correctionValue || null,
@@ -168,7 +176,7 @@ export default function Home() {
     try {
       const response = await fetch(`${API_URL}/api/v1/documents/${result.document_id}/review`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: apiHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           status: "approved",
           note: reviewReason,
@@ -217,6 +225,15 @@ export default function Home() {
           <button disabled={!file || loading} onClick={parseDocument}>
             {loading ? "Reading evidence…" : "Parse document"}
           </button>
+          <label className="api-key-field">
+            API key <small>optional in local mode</small>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(event) => setApiKey(event.target.value)}
+              autoComplete="off"
+            />
+          </label>
           {error && <p className="error">{error}</p>}
           <div className="principle">
             <span>NO SILENT GUESSES</span>

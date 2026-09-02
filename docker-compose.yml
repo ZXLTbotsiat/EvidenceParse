@@ -4,13 +4,23 @@ services:
       context: ./apps/api
     environment:
       EVIDENCE_PARSE_MAX_UPLOAD_MB: ${EVIDENCE_PARSE_MAX_UPLOAD_MB:-20}
-      EVIDENCE_PARSE_DATABASE_URL: postgresql+psycopg://evidence_parse:evidence_parse@postgres:5432/evidence_parse
+      EVIDENCE_PARSE_MAX_BATCH_FILES: ${EVIDENCE_PARSE_MAX_BATCH_FILES:-20}
+      EVIDENCE_PARSE_MAX_BATCH_MB: ${EVIDENCE_PARSE_MAX_BATCH_MB:-100}
+      EVIDENCE_PARSE_DATABASE_URL: postgresql+psycopg://evidence_parse:${POSTGRES_PASSWORD:-evidence_parse}@postgres:5432/evidence_parse
       EVIDENCE_PARSE_AUTO_CREATE_SCHEMA: "false"
+      EVIDENCE_PARSE_AUTH_REQUIRED: ${EVIDENCE_PARSE_AUTH_REQUIRED:-false}
+      EVIDENCE_PARSE_API_KEYS: ${EVIDENCE_PARSE_API_KEYS:-}
+      EVIDENCE_PARSE_CORS_ORIGINS: ${EVIDENCE_PARSE_CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
     depends_on:
       postgres:
         condition: service_healthy
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   web:
     build:
@@ -18,7 +28,8 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     ports:
       - "3000:3000"
 
@@ -27,7 +38,7 @@ services:
     environment:
       POSTGRES_DB: evidence_parse
       POSTGRES_USER: evidence_parse
-      POSTGRES_PASSWORD: evidence_parse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-evidence_parse}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U evidence_parse -d evidence_parse"]
       interval: 5s

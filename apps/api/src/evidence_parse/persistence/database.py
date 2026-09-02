@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.pool import StaticPool
 
@@ -24,6 +24,12 @@ class Database:
 
     def create_schema(self) -> None:
         Base.metadata.create_all(self.engine)
+
+    def ping(self) -> None:
+        """Raise when the configured database cannot serve a trivial query."""
+
+        with self.engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
 
     def dispose(self) -> None:
         self.engine.dispose()

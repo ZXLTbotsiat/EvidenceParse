@@ -61,3 +61,33 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
       - run: npm run build
+
+  python-sdk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/python-sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests
+      - run: pytest -q
+
+  containers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build api web
+      - run: docker compose up --detach postgres api web
+      - name: Verify container health and non-root users
+        run: |
+          curl --fail --retry 20 --retry-delay 3 http://127.0.0.1:8000/health/ready
+          curl --fail --retry 20 --retry-delay 3 http://127.0.0.1:3000/
+          test "$(docker compose exec -T api id -u)" = "10001"
+          test "$(docker compose exec -T web id -u)" = "1001"
+      - name: Clean up containers
+        if: always()
+        run: docker compose down --volumes

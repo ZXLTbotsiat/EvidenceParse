@@ -22,6 +22,7 @@ from evidence_parse.api.models import (
     ReviewDecisionRequest,
     ReviewEvent,
 )
+from evidence_parse.api.security import require_api_key
 from evidence_parse.application import (
     BatchApplicationService,
     DocumentApplicationService,
@@ -37,7 +38,7 @@ from evidence_parse.persistence import (
 from evidence_parse.schemas import UnsupportedSchemaError
 from evidence_parse.service import InvalidDocumentError, UnsupportedDocumentError
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter(prefix="/api/v1", dependencies=[Depends(require_api_key)])
 
 
 @router.post("/batches", response_model=BatchJobResponse, status_code=202)

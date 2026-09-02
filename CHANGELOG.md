@@ -2,6 +2,21 @@
 
 All notable changes to EvidenceParse are documented here.
 
+## [0.6.0] - 2026-09-02
+
+### Added
+
+- Optional constant-time API key authentication with OpenAPI integration and key rotation.
+- Configurable CORS origins, request IDs, defensive response headers, and readiness probes.
+- Non-root API and web images plus end-to-end container verification in CI.
+- A separately packaged Python SDK for parsing, batches, corrections, and review decisions.
+- Deployment and security guidance for responsible self-hosting.
+
+### Changed
+
+- The web workbench accepts an optional in-memory API key for protected deployments.
+- Docker Compose waits for PostgreSQL and API readiness before dependent services start.
+
 ## [0.5.0] - 2026-09-02
 
 ### Added

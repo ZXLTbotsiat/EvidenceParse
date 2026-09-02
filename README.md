@@ -1,5 +1,7 @@
 # EvidenceParse
 
+[![CI](https://github.com/ZXLTbotsiat/EvidenceParse/actions/workflows/ci.yml/badge.svg)](https://github.com/ZXLTbotsiat/EvidenceParse/actions/workflows/ci.yml)
+
 EvidenceParse is an evidence-first document extraction system for digital PDFs,
 scanned documents, and images. It is designed around a simple rule: an extracted
 value is useful only when a person can verify where it came from.
@@ -27,6 +29,9 @@ plus durable duplicate detection and an audited human-review workflow.
 - document listing and review-status filtering
 - bounded multi-file batch jobs with persistent item-level status
 - reproducible JSON and Markdown benchmark reports
+- optional API key protection and documented key rotation
+- liveness/readiness probes, defensive headers, and non-root containers
+- a separately packaged Python SDK
 - structured JSON API
 - browser review screen
 - Docker Compose development environment
@@ -59,6 +64,7 @@ Upload
 - `apps/api/src/evidence_parse/schemas`: replaceable document-schema composition
 - `apps/api/src/evidence_parse/validators`: deterministic business validation
 - `apps/api/migrations`: versioned Alembic database migrations
+- `packages/python-sdk`: client library with an independent test and release boundary
 - `benchmarks`: reproducible reports over the versioned synthetic corpus
 - `datasets`: versioned synthetic regression corpus and expected API results
 - `samples`: small inputs intended for manual product demonstrations
@@ -83,6 +89,11 @@ Then open:
 
 Compose stores application state in a named PostgreSQL volume and applies the
 latest Alembic migration before the API starts.
+
+For a protected deployment, set `EVIDENCE_PARSE_AUTH_REQUIRED=true` and provide
+one or more comma-separated values in `EVIDENCE_PARSE_API_KEYS`. Keep real keys
+in your environment or secret manager—never in this repository. See
+[`docs/deployment.md`](docs/deployment.md) for deployment boundaries and key rotation.
 
 ## Run the API locally
 
@@ -157,6 +168,22 @@ cases. The committed v2 report passes all cases and all declared assertions.
 This is regression evidence for known synthetic fixtures—not a production or
 unseen-document accuracy claim. See [`benchmarks/README.md`](benchmarks/README.md).
 
+## Python SDK
+
+```bash
+pip install -e packages/python-sdk
+```
+
+```python
+from evidence_parse_sdk import EvidenceParseClient
+
+with EvidenceParseClient("http://localhost:8000", api_key="your-runtime-key") as client:
+    result = client.parse_document("invoice.pdf")
+```
+
+The SDK does not persist API keys. It covers individual parsing, batch jobs,
+document queries, field corrections, review decisions, and audit history.
+
 ## Delivery roadmap
 
 - **Batch 1:** digital PDF evidence pipeline and review UI
@@ -164,11 +191,11 @@ unseen-document accuracy claim. See [`benchmarks/README.md`](benchmarks/README.m
 - **Batch 3:** layout-aware line-item table extraction and pluggable schemas
 - **Batch 4:** review corrections, PostgreSQL persistence, duplicate workflow ✓
 - **Batch 5:** benchmark dataset, accuracy reports, jobs/batch processing ✓
-- **Batch 6:** authentication, deployment hardening, SDKs and integrations
+- **Batch 6:** authentication, deployment hardening, SDKs and integrations ✓
 
 ## Non-goals for the first release
 
-- claiming production accuracy without a benchmark
+- claiming production accuracy from the synthetic benchmark
 - hard-coding one parser per supplier
 - silently guessing missing fields
 - storing uploaded documents without an explicit retention policy

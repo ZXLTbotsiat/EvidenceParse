@@ -1,7 +1,8 @@
+import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncIterator, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 
@@ -45,18 +46,42 @@ def create_app(
     application.state.database = database
     application.state.document_service = service
     application.state.batch_service = batch_service
+    application.state.settings = settings
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        allow_origins=list(settings.cors_origins),
         allow_credentials=False,
         allow_methods=["GET", "POST"],
         allow_headers=["*"],
     )
     application.include_router(router)
 
+    @application.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["X-Request-ID"] = str(uuid.uuid4())
+        if request.url.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
     @application.get("/health")
     def health() -> dict:
         return {"status": "ok", "service": "evidence-parse-api", "version": __version__}
+
+    @application.get("/health/live")
+    def liveness() -> dict:
+        return {"status": "ok"}
+
+    @application.get("/health/ready")
+    async def readiness() -> dict:
+        try:
+            await run_in_threadpool(database.ping)
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="Database is unavailable.") from exc
+        return {"status": "ready"}
 
     return application
 
