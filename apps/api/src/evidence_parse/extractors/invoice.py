@@ -28,6 +28,9 @@ FIELD_PATTERNS: Dict[str, List[Pattern[str]]] = {
         re.compile(r"(?<!sub)(?:grand\s+)?total\s*[:\-]?\s*(?:[$₹€£]\s*)?([\d,]+\.\d{2})", re.I),
     ],
 }
+AUTO_ACCEPT_CONFIDENCE = 0.8
+TEXT_PATTERN_CONFIDENCE = 0.92
+UNLOCATED_PATTERN_CONFIDENCE = 0.75
 
 
 class InvoiceExtractor:
@@ -54,19 +57,32 @@ class InvoiceExtractor:
                 continue
             value = match.group(1).strip()
             evidence: List[Evidence] = []
+            confidence = UNLOCATED_PATTERN_CONFIDENCE
             try:
-                page, bbox, source_text = locate_text(match.group(0), spans)
-                evidence.append(Evidence(page=page, text=source_text, bbox=bbox))
+                source_span = locate_text(match.group(0), spans)
+                evidence.append(
+                    Evidence(
+                        page=source_span.page,
+                        text=source_span.text,
+                        bbox=source_span.bbox,
+                    )
+                )
+                confidence = round(TEXT_PATTERN_CONFIDENCE * source_span.confidence, 4)
             except LookupError:
                 pass
+            review_required = not evidence or confidence < AUTO_ACCEPT_CONFIDENCE
+            if not evidence:
+                review_reason = "Value matched but source coordinates were not found."
+            elif review_required:
+                review_reason = "Value confidence is below the automatic acceptance threshold."
+            else:
+                review_reason = None
             return ExtractedValue(
                 value=value,
-                confidence=0.92 if evidence else 0.75,
+                confidence=confidence,
                 evidence=evidence,
-                review_required=not evidence,
-                review_reason=(
-                    None if evidence else "Value matched but source coordinates were not found."
-                ),
+                review_required=review_required,
+                review_reason=review_reason,
             )
 
         return ExtractedValue(

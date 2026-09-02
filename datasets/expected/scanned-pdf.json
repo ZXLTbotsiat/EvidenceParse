@@ -1,9 +1,11 @@
 {
   "body": {
-    "fields.total.review_required": true,
-    "fields.total.value": null,
+    "fields.invoice_number.value": "SYN-IMAGE-01",
+    "fields.total.evidence.0.page": 1,
+    "fields.total.review_required": false,
+    "fields.total.value": "236.00",
     "source_kind": "scanned_pdf",
-    "validations.0.passed": null
+    "validations.0.passed": true
   },
   "status_code": 200
 }

@@ -34,9 +34,9 @@ corpus remains useful while OCR and extraction providers evolve.
 - unsupported text file;
 - deliberately corrupt PDF.
 
-OCR is not enabled in the current release. Scanned and image fixtures therefore
-expect `null` values and human-review flags. Future OCR batches will update these
-versioned expectations alongside the implementation.
+Scanned and image fixtures exercise the real CPU OCR pipeline. Their expected
+results include recognized values, evidence coordinates, confidence-driven
+review decisions, and arithmetic validation.
 
 ## Regenerate
 

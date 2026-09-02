@@ -35,3 +35,22 @@ def test_missing_values_are_not_invented() -> None:
     assert fields["total"].value is None
     assert fields["total"].review_required is True
     assert validations[0].passed is None
+
+
+def test_low_ocr_confidence_requires_human_review() -> None:
+    text = "Invoice No: LOW-01"
+    page = PageContent(page=1, width=500, height=700, text=text)
+    span = TextSpan(
+        page=1,
+        text=text,
+        bbox=BoundingBox(x0=20, y0=30, x1=180, y1=50),
+        confidence=0.6,
+    )
+
+    fields, _ = InvoiceExtractor().extract([page], [span])
+
+    invoice_number = fields["invoice_number"]
+    assert invoice_number.value == "LOW-01"
+    assert invoice_number.confidence == 0.552
+    assert invoice_number.review_required is True
+    assert "below" in invoice_number.review_reason

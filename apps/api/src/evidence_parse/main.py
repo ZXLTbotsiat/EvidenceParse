@@ -2,13 +2,15 @@ import os
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 
+from evidence_parse import __version__
 from evidence_parse.models import DocumentParseResult
 from evidence_parse.service import DocumentParser, UnsupportedDocumentError
 
 app = FastAPI(
     title="EvidenceParse API",
-    version="0.1.0",
+    version=__version__,
     description="Evidence-first document extraction with explicit human-review boundaries.",
 )
 app.add_middleware(
@@ -23,7 +25,7 @@ parser = DocumentParser()
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "service": "evidence-parse-api", "version": "0.1.0"}
+    return {"status": "ok", "service": "evidence-parse-api", "version": __version__}
 
 
 @app.post("/api/v1/documents/parse", response_model=DocumentParseResult)
@@ -36,7 +38,8 @@ async def parse_document(file: UploadFile = File(...)) -> DocumentParseResult:
         raise HTTPException(status_code=413, detail="The uploaded file exceeds the size limit.")
 
     try:
-        return parser.parse(
+        return await run_in_threadpool(
+            parser.parse,
             filename=file.filename or "document",
             content_type=file.content_type or "application/octet-stream",
             content=content,

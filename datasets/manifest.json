@@ -62,38 +62,38 @@
     },
     {
       "content_type": "application/pdf",
-      "description": "Image-only PDF that must be routed to OCR and human review.",
+      "description": "Image-only PDF recognized through the OCR pipeline.",
       "expected": "expected/scanned-pdf.json",
       "id": "scanned-pdf",
       "source": "synthetic/invoices/scanned-pdf/scanned-invoice.pdf",
       "tags": [
         "invoice",
         "scanned-pdf",
-        "ocr-pending"
+        "ocr"
       ]
     },
     {
       "content_type": "image/png",
-      "description": "PNG invoice routed to OCR and human review.",
+      "description": "PNG invoice recognized through the OCR pipeline.",
       "expected": "expected/image-png.json",
       "id": "image-png",
       "source": "synthetic/invoices/images/invoice.png",
       "tags": [
         "invoice",
         "png",
-        "ocr-pending"
+        "ocr"
       ]
     },
     {
       "content_type": "image/jpeg",
-      "description": "JPEG invoice routed to OCR and human review.",
+      "description": "JPEG invoice recognized through the OCR pipeline.",
       "expected": "expected/image-jpeg.json",
       "id": "image-jpeg",
       "source": "synthetic/invoices/images/invoice.jpg",
       "tags": [
         "invoice",
         "jpeg",
-        "ocr-pending"
+        "ocr"
       ]
     },
     {

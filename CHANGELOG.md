@@ -2,13 +2,16 @@
 
 All notable changes to EvidenceParse are documented here.
 
-## [Unreleased]
+## [0.2.0] - 2026-09-02
 
 ### Added
 
 - Versioned, manifest-driven synthetic test dataset with ten document variants.
 - Expected API results for digital, scanned, image, invalid, and corrupt inputs.
 - Dataset generator and integration contract coverage.
+- Replaceable RapidOCR provider with bundled CPU-compatible ONNX models.
+- Scanned-PDF rendering and image preprocessing with source-coordinate mapping.
+- Confidence-driven human review for OCR-derived fields.
 
 ## [0.1.0] - 2026-09-02
 

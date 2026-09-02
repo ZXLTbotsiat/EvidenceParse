@@ -4,15 +4,17 @@ EvidenceParse is an evidence-first document extraction system for digital PDFs,
 scanned documents, and images. It is designed around a simple rule: an extracted
 value is useful only when a person can verify where it came from.
 
-The project is being delivered in small, working batches. The first batch
-implements a runnable invoice pipeline for digital PDFs and establishes the
-contracts that later OCR, layout, and review components will use.
+The project is being delivered in small, working batches. The first two batches
+provide a runnable invoice pipeline for digital PDFs and OCR-backed images,
+while keeping layout and review components behind stable contracts.
 
 ## What works today
 
 - `PDF`, `JPG`, `JPEG`, and `PNG` upload contract
 - digital-versus-scanned PDF detection
-- invoice number, date, subtotal, tax, and total extraction from digital PDFs
+- local CPU OCR for scanned PDFs and images using bundled ONNX models
+- image orientation, contrast, and small-input normalization before OCR
+- invoice number, date, subtotal, tax, and total extraction across supported inputs
 - page and bounding-box evidence for matched values
 - confidence and human-review flags
 - arithmetic validation for subtotal + tax = total
@@ -22,8 +24,11 @@ contracts that later OCR, layout, and review components will use.
 - Docker Compose development environment
 - API and parser tests
 
-Image OCR and scanned-PDF OCR are intentionally reported as `review_required`
-in this first batch rather than returning invented values.
+OCR providers are isolated behind a small interface. Recognized text keeps its
+source coordinates and OCR confidence; low-confidence matches remain visible
+but are marked for human review instead of being silently accepted.
+OCR runs locally and does not send documents to an external service. The first
+OCR request can take a few seconds while the bundled models are initialized.
 
 ## Architecture
 
@@ -91,7 +96,7 @@ warnings, and a content fingerprint.
 ## Delivery roadmap
 
 - **Batch 1:** digital PDF evidence pipeline and review UI
-- **Batch 2:** PaddleOCR provider, image preprocessing, scanned PDF support
+- **Batch 2:** RapidOCR provider, image preprocessing, scanned PDF support
 - **Batch 3:** layout-aware line-item table extraction and pluggable schemas
 - **Batch 4:** review corrections, PostgreSQL persistence, duplicate workflow
 - **Batch 5:** benchmark dataset, accuracy reports, jobs/batch processing

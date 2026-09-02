@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List
 
 import fitz
 
@@ -11,6 +11,7 @@ class TextSpan:
     page: int
     text: str
     bbox: BoundingBox
+    confidence: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -57,16 +58,13 @@ class PdfTextExtractor:
                 )
 
         visible_characters = sum(len("".join(page.text.split())) for page in pages)
-        source_kind = (
-            SourceKind.DIGITAL_PDF if visible_characters >= 20 else SourceKind.SCANNED_PDF
-        )
+        source_kind = SourceKind.DIGITAL_PDF if visible_characters >= 20 else SourceKind.SCANNED_PDF
         return PdfExtraction(source_kind=source_kind, pages=pages, spans=spans)
 
 
-def locate_text(value: str, spans: List[TextSpan]) -> Tuple[int, BoundingBox, str]:
+def locate_text(value: str, spans: List[TextSpan]) -> TextSpan:
     normalized = value.casefold().strip()
     for span in spans:
         if normalized and normalized in span.text.casefold():
-            return span.page, span.bbox, span.text
+            return span
     raise LookupError(value)
-

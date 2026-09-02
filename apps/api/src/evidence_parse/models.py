@@ -64,4 +64,3 @@ class DocumentParseResult(BaseModel):
     line_items: List[InvoiceLineItem] = Field(default_factory=list)
     validations: List[ValidationResult] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
-

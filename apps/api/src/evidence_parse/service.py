@@ -1,13 +1,12 @@
 import hashlib
-import io
 import uuid
-from typing import List
-
-from PIL import Image
+from typing import List, Optional
 
 from evidence_parse.extractors.invoice import InvoiceExtractor
 from evidence_parse.extractors.pdf import PdfTextExtractor
-from evidence_parse.models import DocumentParseResult, ExtractedValue, SourceKind, ValidationResult
+from evidence_parse.models import DocumentParseResult, SourceKind
+from evidence_parse.ocr import OcrProvider, PreparedImage, RapidOcrProvider
+from evidence_parse.ocr.preprocessing import ImagePreprocessor, ScannedPdfRenderer
 
 
 class UnsupportedDocumentError(ValueError):
@@ -15,9 +14,12 @@ class UnsupportedDocumentError(ValueError):
 
 
 class DocumentParser:
-    def __init__(self) -> None:
+    def __init__(self, ocr_provider: Optional[OcrProvider] = None) -> None:
         self.pdf_extractor = PdfTextExtractor()
         self.invoice_extractor = InvoiceExtractor()
+        self.image_preprocessor = ImagePreprocessor()
+        self.pdf_renderer = ScannedPdfRenderer(self.image_preprocessor)
+        self.ocr_provider = ocr_provider or RapidOcrProvider()
 
     def parse(self, filename: str, content_type: str, content: bytes) -> DocumentParseResult:
         fingerprint = hashlib.sha256(content).hexdigest()
@@ -27,13 +29,13 @@ class DocumentParser:
         if normalized_type == "application/pdf" or filename.lower().endswith(".pdf"):
             extraction = self.pdf_extractor.extract(content)
             if extraction.source_kind is SourceKind.SCANNED_PDF:
-                return self._ocr_pending_result(
+                return self._parse_ocr(
                     document_id,
                     fingerprint,
                     filename,
                     content_type,
                     SourceKind.SCANNED_PDF,
-                    len(extraction.pages),
+                    self.pdf_renderer.render(content),
                 )
             fields, validations = self.invoice_extractor.extract(extraction.pages, extraction.spans)
             return DocumentParseResult(
@@ -50,48 +52,39 @@ class DocumentParser:
         if normalized_type in {"image/jpeg", "image/png"} or filename.lower().endswith(
             (".jpg", ".jpeg", ".png")
         ):
-            image = Image.open(io.BytesIO(content))
-            image.verify()
-            return self._ocr_pending_result(
-                document_id, fingerprint, filename, content_type, SourceKind.IMAGE, 1
+            return self._parse_ocr(
+                document_id,
+                fingerprint,
+                filename,
+                content_type,
+                SourceKind.IMAGE,
+                [self.image_preprocessor.from_bytes(content)],
             )
 
         raise UnsupportedDocumentError("Only PDF, JPG, JPEG, and PNG are supported.")
 
-    def _ocr_pending_result(
+    def _parse_ocr(
         self,
         document_id: str,
         fingerprint: str,
         filename: str,
         content_type: str,
         source_kind: SourceKind,
-        page_count: int,
+        prepared_pages: List[PreparedImage],
     ) -> DocumentParseResult:
-        field_names = ["invoice_number", "invoice_date", "subtotal", "tax", "total"]
-        fields = {
-            name: ExtractedValue(
-                confidence=0,
-                review_required=True,
-                review_reason="OCR provider is not enabled in the current release.",
-            )
-            for name in field_names
-        }
-        validations: List[ValidationResult] = [
-            ValidationResult(
-                code="invoice.total_arithmetic",
-                passed=None,
-                message="Unable to verify totals until OCR extraction is available.",
-                fields=["subtotal", "tax", "total"],
-            )
-        ]
+        pages, spans = self.ocr_provider.extract(prepared_pages)
+        fields, validations = self.invoice_extractor.extract(pages, spans)
+        warnings = []
+        if not spans:
+            warnings.append("OCR produced no text; all missing values require human review.")
         return DocumentParseResult(
             document_id=document_id,
             content_fingerprint=fingerprint,
             filename=filename,
             content_type=content_type,
             source_kind=source_kind,
-            page_count=page_count,
+            page_count=len(pages),
             fields=fields,
             validations=validations,
-            warnings=["OCR is scheduled for Batch 2; no values were guessed."],
+            warnings=warnings,
         )
