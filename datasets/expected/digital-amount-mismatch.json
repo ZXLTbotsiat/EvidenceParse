@@ -1,0 +1,8 @@
+{
+  "body": {
+    "fields.total.value": "250.00",
+    "source_kind": "digital_pdf",
+    "validations.0.passed": false
+  },
+  "status_code": 200
+}

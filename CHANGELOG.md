@@ -2,6 +2,14 @@
 
 All notable changes to EvidenceParse are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Versioned, manifest-driven synthetic test dataset with ten document variants.
+- Expected API results for digital, scanned, image, invalid, and corrupt inputs.
+- Dataset generator and integration contract coverage.
+
 ## [0.1.0] - 2026-09-02
 
 ### Added
@@ -14,4 +22,3 @@ All notable changes to EvidenceParse are documented here.
 - Next.js upload and review interface.
 - Docker Compose and GitHub Actions configuration.
 - Initial parser and API test suite.
-

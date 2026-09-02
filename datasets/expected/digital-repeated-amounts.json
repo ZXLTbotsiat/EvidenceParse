@@ -1,0 +1,8 @@
+{
+  "body": {
+    "fields.subtotal.evidence.0.text_contains": "Subtotal: 200.00",
+    "fields.subtotal.value": "200.00",
+    "source_kind": "digital_pdf"
+  },
+  "status_code": 200
+}

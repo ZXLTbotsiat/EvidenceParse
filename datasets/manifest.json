@@ -1,0 +1,126 @@
+{
+  "cases": [
+    {
+      "content_type": "application/pdf",
+      "description": "Single-page digital PDF with reconciling totals.",
+      "expected": "expected/digital-standard.json",
+      "id": "digital-standard",
+      "source": "synthetic/invoices/digital-pdf/standard-invoice.pdf",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "happy-path"
+      ]
+    },
+    {
+      "content_type": "application/pdf",
+      "description": "Digital PDF with no monetary fields; missing values must remain null.",
+      "expected": "expected/digital-missing-fields.json",
+      "id": "digital-missing-fields",
+      "source": "synthetic/invoices/digital-pdf/missing-fields.pdf",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "missing-data"
+      ]
+    },
+    {
+      "content_type": "application/pdf",
+      "description": "Digital PDF whose subtotal and tax do not reconcile with total.",
+      "expected": "expected/digital-amount-mismatch.json",
+      "id": "digital-amount-mismatch",
+      "source": "synthetic/invoices/digital-pdf/amount-mismatch.pdf",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "validation"
+      ]
+    },
+    {
+      "content_type": "application/pdf",
+      "description": "The same amount appears as unit price and subtotal; evidence must retain its label.",
+      "expected": "expected/digital-repeated-amounts.json",
+      "id": "digital-repeated-amounts",
+      "source": "synthetic/invoices/digital-pdf/repeated-amounts.pdf",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "evidence"
+      ]
+    },
+    {
+      "content_type": "application/pdf",
+      "description": "Two-page invoice with totals on the second page.",
+      "expected": "expected/digital-multi-page.json",
+      "id": "digital-multi-page",
+      "source": "synthetic/invoices/digital-pdf/multi-page.pdf",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "multi-page"
+      ]
+    },
+    {
+      "content_type": "application/pdf",
+      "description": "Image-only PDF that must be routed to OCR and human review.",
+      "expected": "expected/scanned-pdf.json",
+      "id": "scanned-pdf",
+      "source": "synthetic/invoices/scanned-pdf/scanned-invoice.pdf",
+      "tags": [
+        "invoice",
+        "scanned-pdf",
+        "ocr-pending"
+      ]
+    },
+    {
+      "content_type": "image/png",
+      "description": "PNG invoice routed to OCR and human review.",
+      "expected": "expected/image-png.json",
+      "id": "image-png",
+      "source": "synthetic/invoices/images/invoice.png",
+      "tags": [
+        "invoice",
+        "png",
+        "ocr-pending"
+      ]
+    },
+    {
+      "content_type": "image/jpeg",
+      "description": "JPEG invoice routed to OCR and human review.",
+      "expected": "expected/image-jpeg.json",
+      "id": "image-jpeg",
+      "source": "synthetic/invoices/images/invoice.jpg",
+      "tags": [
+        "invoice",
+        "jpeg",
+        "ocr-pending"
+      ]
+    },
+    {
+      "content_type": "text/plain",
+      "description": "A valid but unsupported text file.",
+      "expected": "expected/unsupported-file.json",
+      "id": "unsupported-file",
+      "source": "synthetic/invalid/unsupported.txt",
+      "tags": [
+        "negative",
+        "unsupported"
+      ]
+    },
+    {
+      "content_type": "application/pdf",
+      "description": "A PDF-like payload that cannot be parsed.",
+      "expected": "expected/corrupt-pdf.json",
+      "id": "corrupt-pdf",
+      "source": "synthetic/invalid/corrupt.pdf",
+      "tags": [
+        "negative",
+        "corrupt"
+      ]
+    }
+  ],
+  "contains_real_personal_data": false,
+  "license": "MIT",
+  "name": "EvidenceParse synthetic invoice regression corpus",
+  "version": 1
+}

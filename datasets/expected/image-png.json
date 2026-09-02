@@ -1,0 +1,8 @@
+{
+  "body": {
+    "fields.total.review_required": true,
+    "fields.total.value": null,
+    "source_kind": "image"
+  },
+  "status_code": 200
+}

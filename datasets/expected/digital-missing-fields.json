@@ -1,0 +1,10 @@
+{
+  "body": {
+    "fields.invoice_number.value": "SYN-MISSING-01",
+    "fields.total.review_required": true,
+    "fields.total.value": null,
+    "source_kind": "digital_pdf",
+    "validations.0.passed": null
+  },
+  "status_code": 200
+}

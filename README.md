@@ -39,7 +39,14 @@ Upload
 
 - `apps/api`: FastAPI extraction service
 - `apps/web`: Next.js review interface
-- `samples`: synthetic or redistributable test material
+- `datasets`: versioned synthetic regression corpus and expected API results
+- `samples`: small inputs intended for manual product demonstrations
+- `tools`: repository maintenance and dataset generation utilities
+
+The repository follows a monorepo-style layout: deployable applications live
+under `apps`, stable test assets live under `datasets`, and developer tooling is
+kept outside runtime packages. See [`datasets/README.md`](datasets/README.md) for
+the corpus structure and coverage.
 
 ## Run with Docker
 
@@ -69,6 +76,9 @@ Run tests:
 pytest
 ```
 
+The test suite includes a manifest-driven contract test over every file in the
+public synthetic dataset.
+
 ## API example
 
 ```bash
@@ -93,4 +103,3 @@ warnings, and a content fingerprint.
 - hard-coding one parser per supplier
 - silently guessing missing fields
 - storing uploaded documents without an explicit retention policy
-

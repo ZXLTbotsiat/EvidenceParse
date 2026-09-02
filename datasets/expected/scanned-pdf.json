@@ -1,0 +1,9 @@
+{
+  "body": {
+    "fields.total.review_required": true,
+    "fields.total.value": null,
+    "source_kind": "scanned_pdf",
+    "validations.0.passed": null
+  },
+  "status_code": 200
+}

@@ -1,0 +1,10 @@
+{
+  "body": {
+    "fields.total.evidence.0.page": 2,
+    "fields.total.value": "236.00",
+    "page_count": 2,
+    "source_kind": "digital_pdf",
+    "validations.0.passed": true
+  },
+  "status_code": 200
+}

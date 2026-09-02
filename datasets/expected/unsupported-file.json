@@ -1,0 +1,6 @@
+{
+  "body": {
+    "detail": "Only PDF, JPG, JPEG, and PNG are supported."
+  },
+  "status_code": 415
+}

@@ -1,0 +1,51 @@
+# Test dataset
+
+This directory is the versioned regression corpus for EvidenceParse. Every
+document is synthetic, contains no customer or personal data, and is covered by
+the repository's MIT license.
+
+## Layout
+
+```text
+datasets/
+├── manifest.json                 # Machine-readable case index
+├── expected/                     # Observable API expectations per case
+└── synthetic/
+    ├── invoices/
+    │   ├── digital-pdf/          # Text-layer PDFs and edge cases
+    │   ├── scanned-pdf/          # Image-only PDFs
+    │   └── images/               # PNG and JPEG inputs
+    └── invalid/                  # Unsupported and deliberately corrupt inputs
+```
+
+The manifest is the source of truth used by the integration test. Expectations
+assert public API behavior rather than private implementation details, so the
+corpus remains useful while OCR and extraction providers evolve.
+
+## Cases
+
+- standard digital PDF;
+- missing monetary fields;
+- inconsistent subtotal, tax, and total;
+- repeated amounts with different semantic labels;
+- multi-page invoice;
+- scanned PDF;
+- PNG and JPEG invoices;
+- unsupported text file;
+- deliberately corrupt PDF.
+
+OCR is not enabled in the current release. Scanned and image fixtures therefore
+expect `null` values and human-review flags. Future OCR batches will update these
+versioned expectations alongside the implementation.
+
+## Regenerate
+
+From the repository root, using the API development environment:
+
+```bash
+python tools/generate_test_dataset.py
+```
+
+Review generated binary changes before committing them. The generator only
+writes the paths declared by its case definitions and never consumes external
+documents.
