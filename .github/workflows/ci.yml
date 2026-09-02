@@ -81,11 +81,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose build api web
-      - run: docker compose up --detach postgres api web
+      - run: docker compose up --detach --wait --wait-timeout 120 postgres api web
       - name: Verify container health and non-root users
         run: |
-          curl --fail --retry 20 --retry-delay 3 http://127.0.0.1:8000/health/ready
-          curl --fail --retry 20 --retry-delay 3 http://127.0.0.1:3000/
+          curl --fail --silent --show-error http://127.0.0.1:8000/health/ready
+          curl --fail --silent --show-error http://127.0.0.1:3000/
           test "$(docker compose exec -T api id -u)" = "10001"
           test "$(docker compose exec -T web id -u)" = "1001"
       - name: Clean up containers
