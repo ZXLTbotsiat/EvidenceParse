@@ -23,6 +23,21 @@ class ReviewStatus(str, Enum):
     APPROVED = "approved"
 
 
+class BatchStatus(str, Enum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    PARTIAL_FAILURE = "partial_failure"
+    FAILED = "failed"
+
+
+class BatchItemStatus(str, Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
 class BoundingBox(BaseModel):
     x0: float
     y0: float

@@ -38,6 +38,14 @@ jobs:
       - run: alembic upgrade head
       - run: ruff check src tests ../../tools
       - run: pytest -q
+      - name: Run synthetic benchmark
+        run: python ../../tools/run_benchmark.py --output-directory "$RUNNER_TEMP/evidence-parse-benchmark"
+      - name: Upload benchmark report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-benchmark
+          path: ${{ runner.temp }}/evidence-parse-benchmark
 
   web:
     runs-on: ubuntu-latest

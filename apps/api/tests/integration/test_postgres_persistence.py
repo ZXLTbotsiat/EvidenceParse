@@ -5,8 +5,8 @@ import fitz
 import pytest
 from sqlalchemy.engine import make_url
 
-from evidence_parse.application import DocumentApplicationService
-from evidence_parse.persistence import Database, DocumentRepository
+from evidence_parse.application import BatchApplicationService, DocumentApplicationService
+from evidence_parse.persistence import BatchRepository, Database, DocumentRepository
 from evidence_parse.schemas import InvoiceSchema, SchemaRegistry
 from evidence_parse.service import DocumentParser
 
@@ -55,9 +55,17 @@ def test_real_postgres_persists_duplicate_occurrences_and_review_history() -> No
         expected_revision=0,
     )
     events = service.review_events(first.document_id)
+    batches = BatchApplicationService(service, BatchRepository(database.engine), schemas)
+    batch_record, sources = batches.create(
+        [("batch-copy.pdf", "application/pdf", content)], "invoice"
+    )
+    batches.process(batch_record.batch_id, batch_record.schema_name, sources)
+    completed_batch = batches.get(batch_record.batch_id)
 
     assert duplicate.duplicate.is_duplicate is True
     assert duplicate.duplicate.occurrences == 2
     assert corrected.review.revision == 1
     assert events[0].event_type == "field_corrected"
+    assert completed_batch.status.value == "completed"
+    assert completed_batch.items[0].document_id == first.document_id
     database.dispose()

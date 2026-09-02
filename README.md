@@ -25,6 +25,8 @@ plus durable duplicate detection and an audited human-review workflow.
 - revision-protected field corrections with original-value preservation
 - deterministic revalidation, review decisions, and immutable audit events
 - document listing and review-status filtering
+- bounded multi-file batch jobs with persistent item-level status
+- reproducible JSON and Markdown benchmark reports
 - structured JSON API
 - browser review screen
 - Docker Compose development environment
@@ -57,6 +59,7 @@ Upload
 - `apps/api/src/evidence_parse/schemas`: replaceable document-schema composition
 - `apps/api/src/evidence_parse/validators`: deterministic business validation
 - `apps/api/migrations`: versioned Alembic database migrations
+- `benchmarks`: reproducible reports over the versioned synthetic corpus
 - `datasets`: versioned synthetic regression corpus and expected API results
 - `samples`: small inputs intended for manual product demonstrations
 - `tools`: repository maintenance and dataset generation utilities
@@ -96,6 +99,12 @@ Local execution defaults to `data/evidence_parse.db`. For PostgreSQL, set
 and run `alembic upgrade head` before starting the API. See `.env.example` for
 the supported configuration names.
 
+Batch uploads are bounded by file count, per-file size, and total request size.
+Their status and document references are persisted, while source bytes remain
+in memory only and are discarded after processing. The current executor runs
+inside the API process; a restart-safe external queue belongs to deployment
+hardening rather than this local-first release.
+
 Run tests:
 
 ```bash
@@ -130,10 +139,23 @@ GET  /api/v1/documents/{document_id}
 POST /api/v1/documents/{document_id}/corrections
 POST /api/v1/documents/{document_id}/review
 GET  /api/v1/documents/{document_id}/review-events
+POST /api/v1/batches
+GET  /api/v1/batches/{batch_id}
 ```
 
 Correction and review writes require the latest `expected_revision`. Stale
 clients receive HTTP `409` instead of overwriting a newer review decision.
+
+## Reproducible benchmark
+
+```bash
+apps/api/.venv/Scripts/python tools/run_benchmark.py
+```
+
+The current synthetic corpus contains 12 positive, edge, OCR, and negative
+cases. The committed v2 report passes all cases and all declared assertions.
+This is regression evidence for known synthetic fixtures—not a production or
+unseen-document accuracy claim. See [`benchmarks/README.md`](benchmarks/README.md).
 
 ## Delivery roadmap
 
@@ -141,7 +163,7 @@ clients receive HTTP `409` instead of overwriting a newer review decision.
 - **Batch 2:** RapidOCR provider, image preprocessing, scanned PDF support
 - **Batch 3:** layout-aware line-item table extraction and pluggable schemas
 - **Batch 4:** review corrections, PostgreSQL persistence, duplicate workflow ✓
-- **Batch 5:** benchmark dataset, accuracy reports, jobs/batch processing
+- **Batch 5:** benchmark dataset, accuracy reports, jobs/batch processing ✓
 - **Batch 6:** authentication, deployment hardening, SDKs and integrations
 
 ## Non-goals for the first release

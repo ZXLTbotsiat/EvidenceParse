@@ -7,8 +7,8 @@ from starlette.concurrency import run_in_threadpool
 
 from evidence_parse import __version__
 from evidence_parse.api.routes import router
-from evidence_parse.application import DocumentApplicationService
-from evidence_parse.persistence import Database, DocumentRepository
+from evidence_parse.application import BatchApplicationService, DocumentApplicationService
+from evidence_parse.persistence import BatchRepository, Database, DocumentRepository
 from evidence_parse.schemas import InvoiceSchema, SchemaRegistry
 from evidence_parse.service import DocumentParser
 from evidence_parse.settings import Settings
@@ -27,6 +27,7 @@ def create_app(
     parser = DocumentParser(schema_registry=schemas)
     repository = DocumentRepository(database.engine)
     service = DocumentApplicationService(parser, repository, schemas)
+    batch_service = BatchApplicationService(service, BatchRepository(database.engine), schemas)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -43,6 +44,7 @@ def create_app(
     )
     application.state.database = database
     application.state.document_service = service
+    application.state.batch_service = batch_service
     application.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],

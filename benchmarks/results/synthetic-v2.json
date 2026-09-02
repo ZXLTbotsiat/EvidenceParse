@@ -1,0 +1,769 @@
+{
+  "corpus_name": "EvidenceParse synthetic invoice regression corpus",
+  "corpus_version": 2,
+  "generated_at": "2026-09-02T09:35:16.397647+00:00",
+  "scope": "Synthetic regression accuracy only; this report is not evidence of real-world document accuracy.",
+  "summary": {
+    "total_cases": 12,
+    "passed_cases": 12,
+    "total_assertions": 77,
+    "passed_assertions": 77,
+    "case_pass_rate": 1.0,
+    "assertion_pass_rate": 1.0,
+    "duration_ms": 5398.86
+  },
+  "by_tag": {
+    "corrupt": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 2,
+      "passed_assertions": 2,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 11.9
+    },
+    "digital-pdf": {
+      "total_cases": 7,
+      "passed_cases": 7,
+      "total_assertions": 48,
+      "passed_assertions": 48,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 159.05
+    },
+    "evidence": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 4,
+      "passed_assertions": 4,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 13.81
+    },
+    "happy-path": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 12,
+      "passed_assertions": 12,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 67.27
+    },
+    "invoice": {
+      "total_cases": 10,
+      "passed_cases": 10,
+      "total_assertions": 73,
+      "passed_assertions": 73,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 5381.78
+    },
+    "jpeg": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 8,
+      "passed_assertions": 8,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 1194.55
+    },
+    "missing-data": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 6,
+      "passed_assertions": 6,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 13.16
+    },
+    "multi-line-item": {
+      "total_cases": 2,
+      "passed_cases": 2,
+      "total_assertions": 16,
+      "passed_assertions": 16,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 35.12
+    },
+    "multi-page": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 6,
+      "passed_assertions": 6,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 13.93
+    },
+    "negative": {
+      "total_cases": 2,
+      "passed_cases": 2,
+      "total_assertions": 4,
+      "passed_assertions": 4,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 17.08
+    },
+    "ocr": {
+      "total_cases": 3,
+      "passed_cases": 3,
+      "total_assertions": 25,
+      "passed_assertions": 25,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 5222.73
+    },
+    "png": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 8,
+      "passed_assertions": 8,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 1177.08
+    },
+    "scanned-pdf": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 9,
+      "passed_assertions": 9,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 2851.1
+    },
+    "table-layout": {
+      "total_cases": 2,
+      "passed_cases": 2,
+      "total_assertions": 16,
+      "passed_assertions": 16,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 35.12
+    },
+    "unsupported": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 2,
+      "passed_assertions": 2,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 5.18
+    },
+    "validation": {
+      "total_cases": 1,
+      "passed_cases": 1,
+      "total_assertions": 4,
+      "passed_assertions": 4,
+      "case_pass_rate": 1.0,
+      "assertion_pass_rate": 1.0,
+      "duration_ms": 15.76
+    }
+  },
+  "cases": [
+    {
+      "case_id": "digital-standard",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "happy-path"
+      ],
+      "duration_ms": 67.27,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "fields.invoice_number.value",
+          "expected": "SYN-2026-0001",
+          "actual": "SYN-2026-0001",
+          "passed": true
+        },
+        {
+          "name": "fields.subtotal.value",
+          "expected": "200.00",
+          "actual": "200.00",
+          "passed": true
+        },
+        {
+          "name": "fields.total.value",
+          "expected": "236.00",
+          "actual": "236.00",
+          "passed": true
+        },
+        {
+          "name": "line_items.0.amount.value",
+          "expected": "200.00",
+          "actual": "200.00",
+          "passed": true
+        },
+        {
+          "name": "line_items.0.description.value",
+          "expected": "Document scanner",
+          "actual": "Document scanner",
+          "passed": true
+        },
+        {
+          "name": "line_items_length",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "page_count",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "digital_pdf",
+          "actual": "digital_pdf",
+          "passed": true
+        },
+        {
+          "name": "validations.0.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "validations.1.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "validations.2.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "digital-missing-fields",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "missing-data"
+      ],
+      "duration_ms": 13.16,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "fields.invoice_number.value",
+          "expected": "SYN-MISSING-01",
+          "actual": "SYN-MISSING-01",
+          "passed": true
+        },
+        {
+          "name": "fields.total.review_required",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "fields.total.value",
+          "expected": null,
+          "actual": null,
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "digital_pdf",
+          "actual": "digital_pdf",
+          "passed": true
+        },
+        {
+          "name": "validations.0.passed",
+          "expected": null,
+          "actual": null,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "digital-amount-mismatch",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "validation"
+      ],
+      "duration_ms": 15.76,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "fields.total.value",
+          "expected": "250.00",
+          "actual": "250.00",
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "digital_pdf",
+          "actual": "digital_pdf",
+          "passed": true
+        },
+        {
+          "name": "validations.0.passed",
+          "expected": false,
+          "actual": false,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "digital-repeated-amounts",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "evidence"
+      ],
+      "duration_ms": 13.81,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "fields.subtotal.evidence.0.text_contains",
+          "expected": "Subtotal: 200.00",
+          "actual": "Subtotal: 200.00",
+          "passed": true
+        },
+        {
+          "name": "fields.subtotal.value",
+          "expected": "200.00",
+          "actual": "200.00",
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "digital_pdf",
+          "actual": "digital_pdf",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "digital-multi-page",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "multi-page"
+      ],
+      "duration_ms": 13.93,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "fields.total.evidence.0.page",
+          "expected": 2,
+          "actual": 2,
+          "passed": true
+        },
+        {
+          "name": "fields.total.value",
+          "expected": "236.00",
+          "actual": "236.00",
+          "passed": true
+        },
+        {
+          "name": "page_count",
+          "expected": 2,
+          "actual": 2,
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "digital_pdf",
+          "actual": "digital_pdf",
+          "passed": true
+        },
+        {
+          "name": "validations.0.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "digital-whitespace-table",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "table-layout",
+        "multi-line-item"
+      ],
+      "duration_ms": 19.67,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "line_items.0.description.value",
+          "expected": "Document scanner",
+          "actual": "Document scanner",
+          "passed": true
+        },
+        {
+          "name": "line_items.1.description.value",
+          "expected": "Archive service",
+          "actual": "Archive service",
+          "passed": true
+        },
+        {
+          "name": "line_items_length",
+          "expected": 2,
+          "actual": 2,
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "digital_pdf",
+          "actual": "digital_pdf",
+          "passed": true
+        },
+        {
+          "name": "validations.1.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "validations.2.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "validations.3.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "digital-pipe-table",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "table-layout",
+        "multi-line-item"
+      ],
+      "duration_ms": 15.45,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "line_items.0.description.value",
+          "expected": "Security camera",
+          "actual": "Security camera",
+          "passed": true
+        },
+        {
+          "name": "line_items.1.amount.value",
+          "expected": "50.00",
+          "actual": "50.00",
+          "passed": true
+        },
+        {
+          "name": "line_items_length",
+          "expected": 2,
+          "actual": 2,
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "digital_pdf",
+          "actual": "digital_pdf",
+          "passed": true
+        },
+        {
+          "name": "validations.1.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "validations.2.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        },
+        {
+          "name": "validations.3.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "scanned-pdf",
+      "tags": [
+        "invoice",
+        "scanned-pdf",
+        "ocr"
+      ],
+      "duration_ms": 2851.1,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "fields.invoice_number.value",
+          "expected": "SYN-IMAGE-01",
+          "actual": "SYN-IMAGE-01",
+          "passed": true
+        },
+        {
+          "name": "fields.total.evidence.0.page",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "fields.total.review_required",
+          "expected": false,
+          "actual": false,
+          "passed": true
+        },
+        {
+          "name": "fields.total.value",
+          "expected": "236.00",
+          "actual": "236.00",
+          "passed": true
+        },
+        {
+          "name": "line_items.0.amount.value",
+          "expected": "200.00",
+          "actual": "200.00",
+          "passed": true
+        },
+        {
+          "name": "line_items_length",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "scanned_pdf",
+          "actual": "scanned_pdf",
+          "passed": true
+        },
+        {
+          "name": "validations.0.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "image-png",
+      "tags": [
+        "invoice",
+        "png",
+        "ocr"
+      ],
+      "duration_ms": 1177.08,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "fields.invoice_number.value",
+          "expected": "SYN-IMAGE-01",
+          "actual": "SYN-IMAGE-01",
+          "passed": true
+        },
+        {
+          "name": "fields.total.review_required",
+          "expected": false,
+          "actual": false,
+          "passed": true
+        },
+        {
+          "name": "fields.total.value",
+          "expected": "236.00",
+          "actual": "236.00",
+          "passed": true
+        },
+        {
+          "name": "line_items.0.amount.value",
+          "expected": "200.00",
+          "actual": "200.00",
+          "passed": true
+        },
+        {
+          "name": "line_items_length",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "image",
+          "actual": "image",
+          "passed": true
+        },
+        {
+          "name": "validations.0.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "image-jpeg",
+      "tags": [
+        "invoice",
+        "jpeg",
+        "ocr"
+      ],
+      "duration_ms": 1194.55,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 200,
+          "actual": 200,
+          "passed": true
+        },
+        {
+          "name": "fields.invoice_number.value",
+          "expected": "SYN-IMAGE-01",
+          "actual": "SYN-IMAGE-01",
+          "passed": true
+        },
+        {
+          "name": "fields.total.review_required",
+          "expected": false,
+          "actual": false,
+          "passed": true
+        },
+        {
+          "name": "fields.total.value",
+          "expected": "236.00",
+          "actual": "236.00",
+          "passed": true
+        },
+        {
+          "name": "line_items.0.amount.value",
+          "expected": "200.00",
+          "actual": "200.00",
+          "passed": true
+        },
+        {
+          "name": "line_items_length",
+          "expected": 1,
+          "actual": 1,
+          "passed": true
+        },
+        {
+          "name": "source_kind",
+          "expected": "image",
+          "actual": "image",
+          "passed": true
+        },
+        {
+          "name": "validations.0.passed",
+          "expected": true,
+          "actual": true,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "unsupported-file",
+      "tags": [
+        "negative",
+        "unsupported"
+      ],
+      "duration_ms": 5.18,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 415,
+          "actual": 415,
+          "passed": true
+        },
+        {
+          "name": "detail",
+          "expected": "Only PDF, JPG, JPEG, and PNG are supported.",
+          "actual": "Only PDF, JPG, JPEG, and PNG are supported.",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "case_id": "corrupt-pdf",
+      "tags": [
+        "negative",
+        "corrupt"
+      ],
+      "duration_ms": 11.9,
+      "passed": true,
+      "assertions": [
+        {
+          "name": "status_code",
+          "expected": 422,
+          "actual": 422,
+          "passed": true
+        },
+        {
+          "name": "detail",
+          "expected": "The PDF could not be parsed.",
+          "actual": "The PDF could not be parsed.",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}

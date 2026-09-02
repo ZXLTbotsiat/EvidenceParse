@@ -2,6 +2,21 @@
 
 All notable changes to EvidenceParse are documented here.
 
+## [0.5.0] - 2026-09-02
+
+### Added
+
+- Bounded multi-file batch submission with persistent job and item statuses.
+- Item-level document references and safe per-file failure reporting.
+- PostgreSQL migration and integration coverage for batch lifecycle records.
+- Reproducible synthetic-corpus benchmark with JSON and Markdown outputs.
+- Per-case, per-assertion, and per-tag benchmark summaries with CI artifacts.
+
+### Documented
+
+- Synthetic benchmark results are explicitly separated from real-world accuracy claims.
+- Uploaded batch bytes remain transient until a retention policy is defined.
+
 ## [0.4.0] - 2026-09-02
 
 ### Added

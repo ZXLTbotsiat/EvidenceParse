@@ -1,11 +1,21 @@
 import os
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 from starlette.concurrency import run_in_threadpool
 
-from evidence_parse.api.dependencies import document_service
+from evidence_parse.api.dependencies import batch_service, document_service
 from evidence_parse.api.models import (
+    BatchJobResponse,
     DocumentListItem,
     DocumentListResponse,
     FieldCorrectionRequest,
@@ -13,16 +23,79 @@ from evidence_parse.api.models import (
     ReviewEvent,
 )
 from evidence_parse.application import (
+    BatchApplicationService,
     DocumentApplicationService,
     InvalidFieldPathError,
     InvalidReviewDecisionError,
 )
 from evidence_parse.models import DocumentParseResult, ReviewStatus
-from evidence_parse.persistence import DocumentNotFoundError, RevisionConflictError
+from evidence_parse.persistence import (
+    BatchNotFoundError,
+    DocumentNotFoundError,
+    RevisionConflictError,
+)
 from evidence_parse.schemas import UnsupportedSchemaError
 from evidence_parse.service import InvalidDocumentError, UnsupportedDocumentError
 
 router = APIRouter(prefix="/api/v1")
+
+
+@router.post("/batches", response_model=BatchJobResponse, status_code=202)
+async def create_batch(
+    background_tasks: BackgroundTasks,
+    files: List[UploadFile] = File(...),
+    schema_name: str = Form("invoice", alias="schema"),
+    service: BatchApplicationService = Depends(batch_service),
+) -> BatchJobResponse:
+    max_files = int(os.getenv("EVIDENCE_PARSE_MAX_BATCH_FILES", "20"))
+    max_file_bytes = int(os.getenv("EVIDENCE_PARSE_MAX_UPLOAD_MB", "20")) * 1024 * 1024
+    max_batch_bytes = int(os.getenv("EVIDENCE_PARSE_MAX_BATCH_MB", "100")) * 1024 * 1024
+    if len(files) > max_files:
+        raise HTTPException(
+            status_code=413,
+            detail=f"A batch can contain at most {max_files} files.",
+        )
+
+    buffered_files = []
+    total_bytes = 0
+    for file in files:
+        content = await file.read()
+        if not content:
+            raise HTTPException(status_code=400, detail=f"{file.filename or 'A file'} is empty.")
+        if len(content) > max_file_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"{file.filename or 'A file'} exceeds the per-file size limit.",
+            )
+        total_bytes += len(content)
+        buffered_files.append(
+            (
+                file.filename or "document",
+                file.content_type or "application/octet-stream",
+                content,
+            )
+        )
+    if total_bytes > max_batch_bytes:
+        raise HTTPException(status_code=413, detail="The batch exceeds the total size limit.")
+
+    try:
+        record, sources = await run_in_threadpool(service.create, buffered_files, schema_name)
+    except UnsupportedSchemaError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    background_tasks.add_task(service.process, record.batch_id, record.schema_name, sources)
+    return BatchJobResponse.model_validate(record)
+
+
+@router.get("/batches/{batch_id}", response_model=BatchJobResponse)
+async def get_batch(
+    batch_id: str,
+    service: BatchApplicationService = Depends(batch_service),
+) -> BatchJobResponse:
+    try:
+        record = await run_in_threadpool(service.get, batch_id)
+        return BatchJobResponse.model_validate(record)
+    except BatchNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Batch not found.") from exc
 
 
 @router.post("/documents/parse", response_model=DocumentParseResult)

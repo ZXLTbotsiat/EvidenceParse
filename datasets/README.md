@@ -22,6 +22,10 @@ The manifest is the source of truth used by the integration test. Expectations
 assert public API behavior rather than private implementation details, so the
 corpus remains useful while OCR and extraction providers evolve.
 
+The same manifest drives `tools/run_benchmark.py`. Versioned benchmark reports
+live under `benchmarks/results`; see `benchmarks/README.md` for their scope and
+interpretation limits.
+
 ## Cases
 
 - standard digital PDF;

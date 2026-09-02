@@ -77,3 +77,43 @@ class ReviewEventRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     document: Mapped[DocumentRow] = relationship(back_populates="review_events")
+
+
+class BatchJobRow(Base):
+    __tablename__ = "batch_jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    schema_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+
+    items: Mapped[List["BatchItemRow"]] = relationship(
+        back_populates="batch", cascade="all, delete-orphan", order_by="BatchItemRow.position"
+    )
+
+    __table_args__ = (Index("ix_batch_jobs_status_created", "status", "created_at"),)
+
+
+class BatchItemRow(Base):
+    __tablename__ = "batch_items"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    batch_id: Mapped[str] = mapped_column(
+        ForeignKey("batch_jobs.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    filename: Mapped[str] = mapped_column(String(512), nullable=False)
+    content_type: Mapped[str] = mapped_column(String(128), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    document_id: Mapped[Optional[str]] = mapped_column(
+        ForeignKey("documents.id", ondelete="SET NULL"), index=True
+    )
+    error: Mapped[Optional[str]] = mapped_column(Text)
+
+    batch: Mapped[BatchJobRow] = relationship(back_populates="items")
+
+    __table_args__ = (
+        UniqueConstraint("batch_id", "position", name="uq_batch_items_batch_position"),
+    )

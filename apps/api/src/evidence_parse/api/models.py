@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from evidence_parse.models import ReviewStatus
+from evidence_parse.models import BatchItemStatus, BatchStatus, ReviewStatus
 
 
 class FieldCorrectionRequest(BaseModel):
@@ -50,3 +50,30 @@ class ReviewEvent(BaseModel):
     reason: str
     reviewer: str
     created_at: datetime
+
+
+class BatchItemResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    item_id: str
+    position: int
+    filename: str
+    content_type: str
+    status: BatchItemStatus
+    document_id: Optional[str]
+    error: Optional[str]
+
+
+class BatchJobResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    batch_id: str
+    schema_name: str
+    status: BatchStatus
+    total_items: int
+    completed_items: int
+    failed_items: int
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    items: List[BatchItemResponse]
