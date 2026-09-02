@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: ./apps/api
+    environment:
+      EVIDENCE_PARSE_MAX_UPLOAD_MB: ${EVIDENCE_PARSE_MAX_UPLOAD_MB:-20}
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: ./apps/web
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
