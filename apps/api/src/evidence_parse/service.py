@@ -2,6 +2,9 @@ import hashlib
 import uuid
 from typing import List, Optional
 
+import fitz
+from PIL import UnidentifiedImageError
+
 from evidence_parse.extractors.pdf import PdfTextExtractor, TextSpan
 from evidence_parse.models import DocumentParseResult, PageContent, SourceKind
 from evidence_parse.ocr import OcrProvider, PreparedImage, RapidOcrProvider
@@ -10,6 +13,10 @@ from evidence_parse.schemas import DocumentSchema, InvoiceSchema, SchemaRegistry
 
 
 class UnsupportedDocumentError(ValueError):
+    pass
+
+
+class InvalidDocumentError(ValueError):
     pass
 
 
@@ -38,7 +45,10 @@ class DocumentParser:
         schema = self.schema_registry.get(schema_name)
 
         if normalized_type == "application/pdf" or filename.lower().endswith(".pdf"):
-            extraction = self.pdf_extractor.extract(content)
+            try:
+                extraction = self.pdf_extractor.extract(content)
+            except (fitz.FileDataError, RuntimeError) as exc:
+                raise InvalidDocumentError("The PDF could not be parsed.") from exc
             if extraction.source_kind is SourceKind.SCANNED_PDF:
                 return self._parse_ocr(
                     document_id,
@@ -63,13 +73,17 @@ class DocumentParser:
         if normalized_type in {"image/jpeg", "image/png"} or filename.lower().endswith(
             (".jpg", ".jpeg", ".png")
         ):
+            try:
+                prepared_image = self.image_preprocessor.from_bytes(content)
+            except (OSError, UnidentifiedImageError) as exc:
+                raise InvalidDocumentError("The image could not be parsed.") from exc
             return self._parse_ocr(
                 document_id,
                 fingerprint,
                 filename,
                 content_type,
                 SourceKind.IMAGE,
-                [self.image_preprocessor.from_bytes(content)],
+                [prepared_image],
                 schema,
             )
 

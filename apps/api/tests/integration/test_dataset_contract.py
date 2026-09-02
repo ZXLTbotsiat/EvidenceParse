@@ -5,12 +5,9 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from evidence_parse.main import app
-
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 DATASET_ROOT = REPOSITORY_ROOT / "datasets"
 MANIFEST = json.loads((DATASET_ROOT / "manifest.json").read_text(encoding="utf-8"))
-client = TestClient(app)
 
 
 def _resolve_path(value: Any, path: str) -> Any:
@@ -33,7 +30,7 @@ def _assert_expected_body(actual: dict[str, Any], expected: dict[str, Any]) -> N
 
 
 @pytest.mark.parametrize("case", MANIFEST["cases"], ids=lambda case: case["id"])
-def test_dataset_case_matches_public_api_contract(case: dict[str, Any]) -> None:
+def test_dataset_case_matches_public_api_contract(case: dict[str, Any], client: TestClient) -> None:
     source_path = DATASET_ROOT / case["source"]
     expected = json.loads((DATASET_ROOT / case["expected"]).read_text(encoding="utf-8"))
 

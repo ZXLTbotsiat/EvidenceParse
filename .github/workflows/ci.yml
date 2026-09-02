@@ -8,6 +8,24 @@ on:
 jobs:
   api:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: evidence_parse_test
+          POSTGRES_USER: evidence_parse
+          POSTGRES_PASSWORD: evidence_parse
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U evidence_parse -d evidence_parse_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      EVIDENCE_PARSE_DATABASE_URL: postgresql+psycopg://evidence_parse:evidence_parse@127.0.0.1:5432/evidence_parse_test
+      EVIDENCE_PARSE_AUTO_CREATE_SCHEMA: "false"
+      EVIDENCE_PARSE_TEST_POSTGRES_URL: postgresql+psycopg://evidence_parse:evidence_parse@127.0.0.1:5432/evidence_parse_test
     defaults:
       run:
         working-directory: apps/api
@@ -17,6 +35,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
+      - run: alembic upgrade head
       - run: ruff check src tests ../../tools
       - run: pytest -q
 

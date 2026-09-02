@@ -1,10 +1,6 @@
 import fitz
 from fastapi.testclient import TestClient
 
-from evidence_parse.main import app
-
-client = TestClient(app)
-
 
 def _invoice_pdf() -> bytes:
     document = fitz.open()
@@ -16,14 +12,14 @@ def _invoice_pdf() -> bytes:
     return document.tobytes()
 
 
-def test_health() -> None:
+def test_health(client: TestClient) -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-    assert response.json()["version"] == "0.3.0"
+    assert response.json()["version"] == "0.4.0"
 
 
-def test_parse_digital_pdf() -> None:
+def test_parse_digital_pdf(client: TestClient) -> None:
     response = client.post(
         "/api/v1/documents/parse",
         files={"file": ("invoice.pdf", _invoice_pdf(), "application/pdf")},
@@ -39,7 +35,7 @@ def test_parse_digital_pdf() -> None:
     assert len(payload["content_fingerprint"]) == 64
 
 
-def test_rejects_unknown_type() -> None:
+def test_rejects_unknown_type(client: TestClient) -> None:
     response = client.post(
         "/api/v1/documents/parse",
         files={"file": ("notes.txt", b"hello", "text/plain")},
@@ -47,7 +43,7 @@ def test_rejects_unknown_type() -> None:
     assert response.status_code == 415
 
 
-def test_rejects_unknown_schema() -> None:
+def test_rejects_unknown_schema(client: TestClient) -> None:
     response = client.post(
         "/api/v1/documents/parse",
         data={"schema": "receipt"},

@@ -1,9 +1,9 @@
-from typing import List
+from typing import Dict, List
 
 from evidence_parse.extractors.invoice import InvoiceExtractor
 from evidence_parse.extractors.line_items import InvoiceLineItemExtractor
 from evidence_parse.extractors.pdf import TextSpan
-from evidence_parse.models import PageContent
+from evidence_parse.models import ExtractedValue, InvoiceLineItem, PageContent, ValidationResult
 from evidence_parse.schemas.base import SchemaExtraction
 from evidence_parse.validators import InvoiceValidator
 
@@ -25,6 +25,13 @@ class InvoiceSchema:
         return SchemaExtraction(
             fields=fields,
             line_items=line_items,
-            validations=self.validator.validate(fields, line_items),
+            validations=self.validate(fields, line_items),
             warnings=warnings,
         )
+
+    def validate(
+        self,
+        fields: Dict[str, ExtractedValue],
+        line_items: List[InvoiceLineItem],
+    ) -> List[ValidationResult]:
+        return self.validator.validate(fields, line_items)

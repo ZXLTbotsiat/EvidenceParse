@@ -4,6 +4,11 @@ services:
       context: ./apps/api
     environment:
       EVIDENCE_PARSE_MAX_UPLOAD_MB: ${EVIDENCE_PARSE_MAX_UPLOAD_MB:-20}
+      EVIDENCE_PARSE_DATABASE_URL: postgresql+psycopg://evidence_parse:evidence_parse@postgres:5432/evidence_parse
+      EVIDENCE_PARSE_AUTO_CREATE_SCHEMA: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "8000:8000"
 
@@ -17,3 +22,19 @@ services:
     ports:
       - "3000:3000"
 
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: evidence_parse
+      POSTGRES_USER: evidence_parse
+      POSTGRES_PASSWORD: evidence_parse
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evidence_parse -d evidence_parse"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - evidence_parse_postgres:/var/lib/postgresql/data
+
+volumes:
+  evidence_parse_postgres:

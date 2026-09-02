@@ -18,6 +18,10 @@ class DocumentSchema(Protocol):
 
     def extract(self, pages: List[PageContent], spans: List[TextSpan]) -> SchemaExtraction: ...
 
+    def validate(
+        self, fields: Dict[str, ExtractedValue], line_items: List[InvoiceLineItem]
+    ) -> List[ValidationResult]: ...
+
 
 class UnsupportedSchemaError(ValueError):
     pass

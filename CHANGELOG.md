@@ -2,6 +2,23 @@
 
 All notable changes to EvidenceParse are documented here.
 
+## [0.4.0] - 2026-09-02
+
+### Added
+
+- SQLAlchemy persistence with zero-configuration SQLite and PostgreSQL support.
+- Alembic migration for canonical documents, upload occurrences, and review events.
+- Exact duplicate reuse keyed by content fingerprint and extraction schema.
+- Revision-protected field corrections with original values and reviewer metadata.
+- Review decisions, deterministic revalidation, and immutable audit history.
+- Document-list filtering and a browser-based human-review workbench.
+- Dedicated PostgreSQL integration coverage in GitHub Actions.
+
+### Fixed
+
+- Failed deterministic validations now route their concrete fields to human review.
+- Concurrent duplicate-ingestion fallback now returns the current upload metadata.
+
 ## [0.3.0] - 2026-09-02
 
 ### Added

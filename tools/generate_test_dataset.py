@@ -399,7 +399,7 @@ CASES = (
         "application/pdf",
         ("negative", "corrupt"),
         _write_corrupt_pdf,
-        {"status_code": 422, "body": {"detail": "The document could not be parsed."}},
+        {"status_code": 422, "body": {"detail": "The PDF could not be parsed."}},
     ),
 )
 

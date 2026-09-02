@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -8,6 +9,18 @@ class SourceKind(str, Enum):
     DIGITAL_PDF = "digital_pdf"
     SCANNED_PDF = "scanned_pdf"
     IMAGE = "image"
+
+
+class ValueSource(str, Enum):
+    EXTRACTED = "extracted"
+    HUMAN_CORRECTED = "human_corrected"
+
+
+class ReviewStatus(str, Enum):
+    NOT_REQUIRED = "not_required"
+    PENDING = "pending"
+    IN_REVIEW = "in_review"
+    APPROVED = "approved"
 
 
 class BoundingBox(BaseModel):
@@ -29,6 +42,22 @@ class ExtractedValue(BaseModel):
     evidence: List[Evidence] = Field(default_factory=list)
     review_required: bool = False
     review_reason: Optional[str] = None
+    source: ValueSource = ValueSource.EXTRACTED
+    original_value: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+
+
+class DuplicateInfo(BaseModel):
+    is_duplicate: bool = False
+    canonical_document_id: Optional[str] = None
+    occurrences: int = Field(default=1, ge=1)
+
+
+class ReviewSummary(BaseModel):
+    status: ReviewStatus = ReviewStatus.NOT_REQUIRED
+    revision: int = Field(default=0, ge=0)
+    unresolved_fields: List[str] = Field(default_factory=list)
 
 
 class InvoiceLineItem(BaseModel):
@@ -66,3 +95,5 @@ class DocumentParseResult(BaseModel):
     line_items: List[InvoiceLineItem] = Field(default_factory=list)
     validations: List[ValidationResult] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
+    duplicate: DuplicateInfo = Field(default_factory=DuplicateInfo)
+    review: ReviewSummary = Field(default_factory=ReviewSummary)
