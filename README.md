@@ -15,9 +15,11 @@ while keeping layout and review components behind stable contracts.
 - local CPU OCR for scanned PDFs and images using bundled ONNX models
 - image orientation, contrast, and small-input normalization before OCR
 - invoice number, date, subtotal, tax, and total extraction across supported inputs
+- line-item extraction from labeled blocks, aligned columns, and pipe-delimited tables
 - page and bounding-box evidence for matched values
 - confidence and human-review flags
 - arithmetic validation for subtotal + tax = total
+- quantity × unit price and line-item sum validation
 - content fingerprint for duplicate detection by callers
 - structured JSON API
 - browser review screen
@@ -44,6 +46,8 @@ Upload
 
 - `apps/api`: FastAPI extraction service
 - `apps/web`: Next.js review interface
+- `apps/api/src/evidence_parse/schemas`: replaceable document-schema composition
+- `apps/api/src/evidence_parse/validators`: deterministic business validation
 - `datasets`: versioned synthetic regression corpus and expected API results
 - `samples`: small inputs intended for manual product demonstrations
 - `tools`: repository maintenance and dataset generation utilities
@@ -87,11 +91,16 @@ public synthetic dataset.
 ## API example
 
 ```bash
-curl -F "file=@invoice.pdf" http://localhost:8000/api/v1/documents/parse
+curl -F "file=@invoice.pdf" -F "schema=invoice" \
+  http://localhost:8000/api/v1/documents/parse
 ```
 
 The response includes extracted fields, evidence locations, validations,
-warnings, and a content fingerprint.
+warnings, line items, the selected schema name, and a content fingerprint.
+
+The `schema` form field currently accepts `invoice`. New document types can be
+added by implementing the small schema contract and registering the schema,
+without changing PDF, image, or OCR ingestion.
 
 ## Delivery roadmap
 

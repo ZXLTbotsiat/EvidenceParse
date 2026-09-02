@@ -1,11 +1,12 @@
 import os
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 
 from evidence_parse import __version__
 from evidence_parse.models import DocumentParseResult
+from evidence_parse.schemas import UnsupportedSchemaError
 from evidence_parse.service import DocumentParser, UnsupportedDocumentError
 
 app = FastAPI(
@@ -29,7 +30,9 @@ def health() -> dict:
 
 
 @app.post("/api/v1/documents/parse", response_model=DocumentParseResult)
-async def parse_document(file: UploadFile = File(...)) -> DocumentParseResult:
+async def parse_document(
+    file: UploadFile = File(...), schema_name: str = Form("invoice", alias="schema")
+) -> DocumentParseResult:
     content = await file.read()
     max_bytes = int(os.getenv("EVIDENCE_PARSE_MAX_UPLOAD_MB", "20")) * 1024 * 1024
     if not content:
@@ -43,7 +46,10 @@ async def parse_document(file: UploadFile = File(...)) -> DocumentParseResult:
             filename=file.filename or "document",
             content_type=file.content_type or "application/octet-stream",
             content=content,
+            schema_name=schema_name,
         )
+    except UnsupportedSchemaError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except UnsupportedDocumentError as exc:
         raise HTTPException(status_code=415, detail=str(exc)) from exc
     except Exception as exc:

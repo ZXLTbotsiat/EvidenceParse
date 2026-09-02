@@ -1,6 +1,7 @@
 from evidence_parse.extractors.invoice import InvoiceExtractor
 from evidence_parse.extractors.pdf import TextSpan
 from evidence_parse.models import BoundingBox, PageContent
+from evidence_parse.validators import InvoiceValidator
 
 
 def test_extracts_invoice_fields_with_evidence_and_validates_total() -> None:
@@ -18,7 +19,8 @@ Total: 118.00
         bbox=BoundingBox(x0=40, y0=40, x1=300, y1=220),
     )
 
-    fields, validations = InvoiceExtractor().extract([page], [span])
+    fields = InvoiceExtractor().extract([page], [span])
+    validations = InvoiceValidator().validate(fields, [])
 
     assert fields["invoice_number"].value == "INV-2026-0042"
     assert fields["invoice_number"].evidence[0].page == 1
@@ -30,7 +32,8 @@ Total: 118.00
 
 def test_missing_values_are_not_invented() -> None:
     page = PageContent(page=1, width=595, height=842, text="Invoice No: A-1")
-    fields, validations = InvoiceExtractor().extract([page], [])
+    fields = InvoiceExtractor().extract([page], [])
+    validations = InvoiceValidator().validate(fields, [])
 
     assert fields["total"].value is None
     assert fields["total"].review_required is True
@@ -47,7 +50,7 @@ def test_low_ocr_confidence_requires_human_review() -> None:
         confidence=0.6,
     )
 
-    fields, _ = InvoiceExtractor().extract([page], [span])
+    fields = InvoiceExtractor().extract([page], [span])
 
     invoice_number = fields["invoice_number"]
     assert invoice_number.value == "LOW-01"

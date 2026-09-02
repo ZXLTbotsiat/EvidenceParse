@@ -16,11 +16,22 @@ type FieldResult = {
   review_reason?: string | null;
 };
 
+type LineItem = {
+  index: number;
+  description: FieldResult;
+  quantity?: FieldResult | null;
+  unit_price?: FieldResult | null;
+  tax_rate?: FieldResult | null;
+  amount?: FieldResult | null;
+};
+
 type ParseResult = {
   filename: string;
+  schema_name: string;
   source_kind: string;
   page_count: number;
   fields: Record<string, FieldResult>;
+  line_items: LineItem[];
   validations: { code: string; passed?: boolean | null; message: string }[];
   warnings: string[];
 };
@@ -105,7 +116,7 @@ export default function Home() {
             <div className="results">
               <div className="document-meta">
                 <strong>{result.filename}</strong>
-                <span>{result.page_count} page{result.page_count === 1 ? "" : "s"}</span>
+                <span>{result.schema_name} · {result.page_count} page{result.page_count === 1 ? "" : "s"}</span>
               </div>
               {Object.entries(result.fields).map(([name, field]) => (
                 <article className="field" key={name}>
@@ -127,6 +138,22 @@ export default function Home() {
                   )}
                 </article>
               ))}
+              {result.line_items.length > 0 && (
+                <section className="line-items">
+                  <span className="field-name">LINE ITEMS</span>
+                  {result.line_items.map((item) => (
+                    <article key={item.index} className="line-item">
+                      <strong>{item.description.value ?? "Unable to verify"}</strong>
+                      <span>Qty {item.quantity?.value ?? "—"}</span>
+                      <span>Unit {item.unit_price?.value ?? "—"}</span>
+                      <span>Amount {item.amount?.value ?? "—"}</span>
+                      <span className={item.description.review_required ? "review" : "verified"}>
+                        {item.description.review_required ? "Review" : "Verified"}
+                      </span>
+                    </article>
+                  ))}
+                </section>
+              )}
               <div className="validations">
                 {result.validations.map((validation) => (
                   <p key={validation.code}>
@@ -142,4 +169,3 @@ export default function Home() {
     </main>
   );
 }
-

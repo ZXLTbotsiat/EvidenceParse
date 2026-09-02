@@ -29,6 +29,8 @@ corpus remains useful while OCR and extraction providers evolve.
 - inconsistent subtotal, tax, and total;
 - repeated amounts with different semantic labels;
 - multi-page invoice;
+- two-row whitespace-aligned table;
+- two-row pipe-delimited table;
 - scanned PDF;
 - PNG and JPEG invoices;
 - unsupported text file;

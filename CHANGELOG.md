@@ -2,6 +2,16 @@
 
 All notable changes to EvidenceParse are documented here.
 
+## [0.3.0] - 2026-09-02
+
+### Added
+
+- Pluggable document-schema registry with explicit schema selection in the API.
+- Invoice line-item extraction for labeled blocks, whitespace tables, and pipe tables.
+- Per-line arithmetic and line-item-to-subtotal validation.
+- Two multi-row layout fixtures and manifest-driven expectations.
+- Line-item review rendering in the web interface.
+
 ## [0.2.0] - 2026-09-02
 
 ### Added

@@ -62,6 +62,32 @@
     },
     {
       "content_type": "application/pdf",
+      "description": "Two line items in a whitespace-aligned table.",
+      "expected": "expected/digital-whitespace-table.json",
+      "id": "digital-whitespace-table",
+      "source": "synthetic/invoices/digital-pdf/whitespace-table.pdf",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "table-layout",
+        "multi-line-item"
+      ]
+    },
+    {
+      "content_type": "application/pdf",
+      "description": "Two line items in a pipe-delimited table.",
+      "expected": "expected/digital-pipe-table.json",
+      "id": "digital-pipe-table",
+      "source": "synthetic/invoices/digital-pdf/pipe-table.pdf",
+      "tags": [
+        "invoice",
+        "digital-pdf",
+        "table-layout",
+        "multi-line-item"
+      ]
+    },
+    {
+      "content_type": "application/pdf",
       "description": "Image-only PDF recognized through the OCR pipeline.",
       "expected": "expected/scanned-pdf.json",
       "id": "scanned-pdf",
@@ -122,5 +148,5 @@
   "contains_real_personal_data": false,
   "license": "MIT",
   "name": "EvidenceParse synthetic invoice regression corpus",
-  "version": 1
+  "version": 2
 }

@@ -32,6 +32,7 @@ class ExtractedValue(BaseModel):
 
 
 class InvoiceLineItem(BaseModel):
+    index: int = Field(ge=1)
     description: ExtractedValue
     quantity: Optional[ExtractedValue] = None
     unit_price: Optional[ExtractedValue] = None
@@ -58,6 +59,7 @@ class DocumentParseResult(BaseModel):
     content_fingerprint: str
     filename: str
     content_type: str
+    schema_name: str
     source_kind: SourceKind
     page_count: int
     fields: Dict[str, ExtractedValue]

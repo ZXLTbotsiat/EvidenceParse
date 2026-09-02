@@ -4,6 +4,8 @@
     "fields.total.evidence.0.page": 1,
     "fields.total.review_required": false,
     "fields.total.value": "236.00",
+    "line_items.0.amount.value": "200.00",
+    "line_items_length": 1,
     "source_kind": "scanned_pdf",
     "validations.0.passed": true
   },

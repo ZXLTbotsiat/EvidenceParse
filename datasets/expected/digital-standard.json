@@ -3,9 +3,14 @@
     "fields.invoice_number.value": "SYN-2026-0001",
     "fields.subtotal.value": "200.00",
     "fields.total.value": "236.00",
+    "line_items.0.amount.value": "200.00",
+    "line_items.0.description.value": "Document scanner",
+    "line_items_length": 1,
     "page_count": 1,
     "source_kind": "digital_pdf",
-    "validations.0.passed": true
+    "validations.0.passed": true,
+    "validations.1.passed": true,
+    "validations.2.passed": true
   },
   "status_code": 200
 }

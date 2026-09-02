@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import fitz
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 DATASET_ROOT = ROOT / "datasets"
@@ -66,6 +66,7 @@ def _invoice_lines(
         "Description: Document scanner",
         "Quantity: 1",
         "Unit Price: 200.00",
+        "Line Amount: 200.00",
         f"Subtotal: {subtotal}",
         f"Tax: {tax}",
         f"Total: {total}",
@@ -109,13 +110,52 @@ def _write_multi_page_pdf(path: Path) -> None:
     _write_pdf(path, [first_page, second_page])
 
 
+def _write_whitespace_table_pdf(path: Path) -> None:
+    _write_pdf(
+        path,
+        [
+            [
+                "SYNTHETIC INVOICE - WHITESPACE TABLE",
+                "Invoice No: SYN-TABLE-01",
+                "Date: 2026-09-02",
+                "Description          Quantity     Unit Price     Amount",
+                "Document scanner     1            120.00         120.00",
+                "Archive service      2            40.00          80.00",
+                "Subtotal: 200.00",
+                "Tax: 36.00",
+                "Total: 236.00",
+            ]
+        ],
+    )
+
+
+def _write_pipe_table_pdf(path: Path) -> None:
+    _write_pdf(
+        path,
+        [
+            [
+                "SYNTHETIC INVOICE - PIPE TABLE",
+                "Invoice No: SYN-PIPE-01",
+                "Date: 2026-09-02",
+                "Item | Qty | Unit Price | Amount",
+                "Security camera | 2 | 75.00 | 150.00",
+                "Setup service | 1 | 50.00 | 50.00",
+                "Subtotal: 200.00",
+                "Tax: 36.00",
+                "Total: 236.00",
+            ]
+        ],
+    )
+
+
 def _invoice_image() -> Image.Image:
     image = Image.new("RGB", (1000, 1400), "white")
     draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default(size=28)
     y = 80
     for line in _invoice_lines(invoice_number="SYN-IMAGE-01"):
-        draw.text((80, y), line, fill="black")
-        y += 70
+        draw.text((80, y), line, fill="black", font=font)
+        y += 90
     return image
 
 
@@ -178,6 +218,11 @@ CASES = (
                 "fields.subtotal.value": "200.00",
                 "fields.total.value": "236.00",
                 "validations.0.passed": True,
+                "line_items_length": 1,
+                "line_items.0.description.value": "Document scanner",
+                "line_items.0.amount.value": "200.00",
+                "validations.1.passed": True,
+                "validations.2.passed": True,
             },
         ),
     ),
@@ -243,6 +288,44 @@ CASES = (
         ),
     ),
     DatasetCase(
+        "digital-whitespace-table",
+        "Two line items in a whitespace-aligned table.",
+        "synthetic/invoices/digital-pdf/whitespace-table.pdf",
+        "application/pdf",
+        ("invoice", "digital-pdf", "table-layout", "multi-line-item"),
+        _write_whitespace_table_pdf,
+        _success_expectation(
+            source_kind="digital_pdf",
+            **{
+                "line_items_length": 2,
+                "line_items.0.description.value": "Document scanner",
+                "line_items.1.description.value": "Archive service",
+                "validations.1.passed": True,
+                "validations.2.passed": True,
+                "validations.3.passed": True,
+            },
+        ),
+    ),
+    DatasetCase(
+        "digital-pipe-table",
+        "Two line items in a pipe-delimited table.",
+        "synthetic/invoices/digital-pdf/pipe-table.pdf",
+        "application/pdf",
+        ("invoice", "digital-pdf", "table-layout", "multi-line-item"),
+        _write_pipe_table_pdf,
+        _success_expectation(
+            source_kind="digital_pdf",
+            **{
+                "line_items_length": 2,
+                "line_items.0.description.value": "Security camera",
+                "line_items.1.amount.value": "50.00",
+                "validations.1.passed": True,
+                "validations.2.passed": True,
+                "validations.3.passed": True,
+            },
+        ),
+    ),
+    DatasetCase(
         "scanned-pdf",
         "Image-only PDF recognized through the OCR pipeline.",
         "synthetic/invoices/scanned-pdf/scanned-invoice.pdf",
@@ -257,6 +340,8 @@ CASES = (
                 "fields.total.review_required": False,
                 "fields.total.evidence.0.page": 1,
                 "validations.0.passed": True,
+                "line_items_length": 1,
+                "line_items.0.amount.value": "200.00",
             },
         ),
     ),
@@ -274,6 +359,8 @@ CASES = (
                 "fields.total.value": "236.00",
                 "fields.total.review_required": False,
                 "validations.0.passed": True,
+                "line_items_length": 1,
+                "line_items.0.amount.value": "200.00",
             },
         ),
     ),
@@ -291,6 +378,8 @@ CASES = (
                 "fields.total.value": "236.00",
                 "fields.total.review_required": False,
                 "validations.0.passed": True,
+                "line_items_length": 1,
+                "line_items.0.amount.value": "200.00",
             },
         ),
     ),
@@ -343,7 +432,7 @@ def main() -> None:
         DATASET_ROOT / "manifest.json",
         {
             "name": "EvidenceParse synthetic invoice regression corpus",
-            "version": 1,
+            "version": 2,
             "license": "MIT",
             "contains_real_personal_data": False,
             "cases": manifest_cases,

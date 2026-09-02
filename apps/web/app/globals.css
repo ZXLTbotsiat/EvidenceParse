@@ -69,6 +69,9 @@ button:disabled { opacity: .35; cursor: not-allowed; }
 .review { color: var(--danger); border: 1px solid var(--danger); }
 .evidence { grid-column: 1 / -1; margin: 0; font-family: monospace; font-size: 12px; line-height: 1.5; background: rgba(18,61,43,.07); padding: 9px; }
 .muted { opacity: .62; }
+.line-items { margin-top: 24px; border-top: 2px solid var(--ink); padding-top: 18px; }
+.line-item { display: grid; grid-template-columns: minmax(150px, 1fr) repeat(4, auto); gap: 12px; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.line-item strong { font-size: 14px; }
 .validations { margin-top: 22px; }
 .validations p { display: flex; gap: 10px; align-items: flex-start; }
 .validations span { display: grid; place-items: center; min-width: 22px; height: 22px; border: 1px solid var(--ink); font-weight: 900; }
@@ -78,5 +81,6 @@ button:disabled { opacity: .35; cursor: not-allowed; }
   header, .workspace { grid-template-columns: 1fr; }
   .lede { margin-top: 0; }
   .upload-panel { border-right: 0; border-bottom: 1px solid var(--ink); }
+  .line-item { grid-template-columns: 1fr 1fr; }
+  .line-item strong { grid-column: 1 / -1; }
 }
-

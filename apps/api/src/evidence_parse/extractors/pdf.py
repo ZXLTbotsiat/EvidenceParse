@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 import fitz
 
@@ -40,31 +40,39 @@ class PdfTextExtractor:
                     text=text,
                 )
             )
-            for block in page.get_text("blocks"):
-                block_text = str(block[4]).strip()
-                if not block_text:
+            for block in page.get_text("dict")["blocks"]:
+                if block.get("type") != 0:
                     continue
-                spans.append(
-                    TextSpan(
-                        page=page_number,
-                        text=block_text,
-                        bbox=BoundingBox(
-                            x0=round(float(block[0]), 2),
-                            y0=round(float(block[1]), 2),
-                            x1=round(float(block[2]), 2),
-                            y1=round(float(block[3]), 2),
-                        ),
+                for line in block.get("lines", []):
+                    line_text = "".join(
+                        str(span.get("text", "")) for span in line.get("spans", [])
+                    ).strip()
+                    if not line_text:
+                        continue
+                    bbox = line["bbox"]
+                    spans.append(
+                        TextSpan(
+                            page=page_number,
+                            text=line_text,
+                            bbox=BoundingBox(
+                                x0=round(float(bbox[0]), 2),
+                                y0=round(float(bbox[1]), 2),
+                                x1=round(float(bbox[2]), 2),
+                                y1=round(float(bbox[3]), 2),
+                            ),
+                        )
                     )
-                )
 
         visible_characters = sum(len("".join(page.text.split())) for page in pages)
         source_kind = SourceKind.DIGITAL_PDF if visible_characters >= 20 else SourceKind.SCANNED_PDF
         return PdfExtraction(source_kind=source_kind, pages=pages, spans=spans)
 
 
-def locate_text(value: str, spans: List[TextSpan]) -> TextSpan:
+def locate_text(value: str, spans: List[TextSpan], page: Optional[int] = None) -> TextSpan:
     normalized = value.casefold().strip()
     for span in spans:
+        if page is not None and span.page != page:
+            continue
         if normalized and normalized in span.text.casefold():
             return span
     raise LookupError(value)

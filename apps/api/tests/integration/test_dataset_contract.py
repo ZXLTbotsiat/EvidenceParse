@@ -22,7 +22,10 @@ def _resolve_path(value: Any, path: str) -> Any:
 
 def _assert_expected_body(actual: dict[str, Any], expected: dict[str, Any]) -> None:
     for path, expected_value in expected.items():
-        if path.endswith("_contains"):
+        if path.endswith("_length"):
+            actual_value = _resolve_path(actual, path.removesuffix("_length"))
+            assert len(actual_value) == expected_value
+        elif path.endswith("_contains"):
             actual_value = _resolve_path(actual, path.removesuffix("_contains"))
             assert expected_value in actual_value
         else:

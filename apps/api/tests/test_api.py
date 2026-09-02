@@ -20,7 +20,7 @@ def test_health() -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-    assert response.json()["version"] == "0.2.0"
+    assert response.json()["version"] == "0.3.0"
 
 
 def test_parse_digital_pdf() -> None:
@@ -31,6 +31,7 @@ def test_parse_digital_pdf() -> None:
 
     assert response.status_code == 200
     payload = response.json()
+    assert payload["schema_name"] == "invoice"
     assert payload["source_kind"] == "digital_pdf"
     assert payload["fields"]["invoice_number"]["value"] == "DEMO-1001"
     assert "Subtotal" in payload["fields"]["subtotal"]["evidence"][0]["text"]
@@ -44,3 +45,14 @@ def test_rejects_unknown_type() -> None:
         files={"file": ("notes.txt", b"hello", "text/plain")},
     )
     assert response.status_code == 415
+
+
+def test_rejects_unknown_schema() -> None:
+    response = client.post(
+        "/api/v1/documents/parse",
+        data={"schema": "receipt"},
+        files={"file": ("invoice.pdf", _invoice_pdf(), "application/pdf")},
+    )
+
+    assert response.status_code == 400
+    assert "Supported schemas: invoice" in response.json()["detail"]

@@ -1,0 +1,12 @@
+{
+  "body": {
+    "line_items.0.description.value": "Security camera",
+    "line_items.1.amount.value": "50.00",
+    "line_items_length": 2,
+    "source_kind": "digital_pdf",
+    "validations.1.passed": true,
+    "validations.2.passed": true,
+    "validations.3.passed": true
+  },
+  "status_code": 200
+}
