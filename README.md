@@ -14,10 +14,10 @@ original page, text, and coordinates.
 </div>
 
 <p align="center">
-  <img src="docs/images/source-traceability.jpg" alt="EvidenceParse source document and OCR result shown side by side with the selected total highlighted in both panes" width="100%">
+  <img src="docs/images/challenging-rotated.jpg" alt="EvidenceParse recognizing a rotated and skewed two-column scan with the selected heading highlighted in the source" width="100%">
 </p>
 
-<p align="center"><sub>Click any OCR result to return to the exact source page and region.</sub></p>
+<p align="center"><sub>Rotated scan, skewed page, dense two-column reading order — with every result still traceable to its source.</sub></p>
 
 EvidenceParse is a self-hosted document understanding system built for
 traceability. It combines local OCR, structured extraction, deterministic
@@ -28,7 +28,50 @@ original document instead of trusting an opaque JSON response.
 Documents are processed locally. EvidenceParse does not send uploaded files to
 an external OCR or AI service.
 
+## Challenging documents
+
+The differentiator is not merely producing text. EvidenceParse keeps difficult
+OCR output reviewable: low-confidence regions stay visible, and every detected
+block can be checked against the exact source location.
+
+<table>
+  <tr>
+    <td width="50%"><strong>Noisy typewriter text and diacritics</strong></td>
+    <td width="50%"><strong>Old illustrated scan</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/challenging-typewriter.jpg" alt="EvidenceParse recognizing noisy typewriter text with a diacritic and confidence scores"></td>
+    <td><img src="docs/images/challenging-illustrated.jpg" alt="EvidenceParse recognizing an illustrated old-book scan and locating its caption"></td>
+  </tr>
+  <tr>
+    <td>Irregular glyphs, paper noise, and accented text are shown with per-region confidence instead of being silently normalized.</td>
+    <td>Illustrations, aged paper, mixed font sizes, and dense prose remain visually connected to the OCR result.</td>
+  </tr>
+</table>
+
+<p><strong>Synthetic handwritten-style field note</strong></p>
+
+<p align="center">
+  <img src="docs/images/challenging-handwritten-style.jpg" alt="EvidenceParse recognizing a slightly rotated synthetic handwritten-style field note and locating the selected maintenance instruction" width="100%">
+</p>
+
+The deliberately rotated note is included as a reproducible, synthetic stress
+sample. In this run, all six lines were detected; selecting the maintenance
+instruction returned directly to its source region. This is a handwriting-style
+test, not a claim about unrestricted real-world handwriting accuracy.
+
+These are real local runs, not mockups. The public fixture sources, synthetic
+sample scope, and licensing are documented in
+[`datasets/external/ocr-evaluation/README.md`](datasets/external/ocr-evaluation/README.md)
+and [`docs/images/README.md`](docs/images/README.md).
+
 ## Product tour
+
+<p align="center">
+  <img src="docs/images/source-traceability.jpg" alt="EvidenceParse source document and OCR result shown side by side with the selected total highlighted in both panes" width="100%">
+</p>
+
+<p align="center"><sub>Click any OCR result to return to the exact source page and region.</sub></p>
 
 <table>
   <tr>
