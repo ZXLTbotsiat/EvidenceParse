@@ -37,6 +37,16 @@ def run(output_directory: Path) -> dict[str, Any]:
                 },
             )
             duration_ms = (perf_counter() - started) * 1000
+            ground_truth_path = definition.get("ground_truth")
+            ground_truth_text = (
+                (DATASET_ROOT / ground_truth_path).read_text(encoding="utf-8")
+                if ground_truth_path
+                else None
+            )
+            expected_fields = {
+                path: expected["body"][path]
+                for path in definition.get("accuracy_fields", [])
+            }
             cases.append(
                 evaluate_case(
                     case_id=definition["id"],
@@ -46,6 +56,8 @@ def run(output_directory: Path) -> dict[str, Any]:
                     actual_status=response.status_code,
                     actual_body=response.json(),
                     duration_ms=duration_ms,
+                    ground_truth_text=ground_truth_text,
+                    expected_fields=expected_fields,
                 )
             )
 

@@ -1,0 +1,9 @@
+SYNTHETIC INVOICE - PAGE 1 OF 2
+Invoice No: SYN-MULTI-01
+Date: 2026-09-02
+Description: Document scanner
+Amount: 200.00
+SYNTHETIC INVOICE - PAGE 2 OF 2
+Subtotal: 200.00
+Tax: 36.00
+Total: 236.00

@@ -54,6 +54,14 @@ def test_document_parser_accepts_a_replaceable_ocr_provider() -> None:
     assert result.preprocessing[0].variant == "original"
     assert result.preprocessing[0].rotation_degrees == 0
     assert result.preprocessing[0].candidate_count == 7
+    assert [candidate.variant for candidate in result.preprocessing[0].candidates] == [
+        "original",
+        "enhanced",
+        "binary",
+    ]
+    assert sum(candidate.selected for candidate in result.preprocessing[0].candidates) == 1
+    assert all(candidate.text_region_count == 1 for candidate in result.preprocessing[0].candidates)
+    assert all(candidate.character_count > 0 for candidate in result.preprocessing[0].candidates)
 
 
 def test_prepared_image_maps_ocr_coordinates_to_the_source() -> None:

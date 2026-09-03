@@ -124,6 +124,28 @@ class DocumentRepository:
             if not stored.preprocessing and result.preprocessing:
                 stored.preprocessing = result.preprocessing
                 changed = True
+            elif stored.preprocessing and result.preprocessing:
+                fresh_by_page = {page.page: page for page in result.preprocessing}
+                for stored_page in stored.preprocessing:
+                    fresh_page = fresh_by_page.get(stored_page.page)
+                    if stored_page.candidates or fresh_page is None:
+                        continue
+                    stored_page.candidates = [
+                        candidate.model_copy(
+                            update={
+                                "selected": (
+                                    candidate.variant == stored_page.variant
+                                    and candidate.rotation_degrees
+                                    == stored_page.rotation_degrees
+                                    and candidate.deskew_degrees
+                                    == stored_page.deskew_degrees
+                                )
+                            }
+                        )
+                        for candidate in fresh_page.candidates
+                    ]
+                    stored_page.candidate_count = fresh_page.candidate_count
+                    changed = True
             if changed:
                 row.result_json = stored.model_dump(mode="json")
 

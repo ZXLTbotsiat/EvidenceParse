@@ -1,0 +1,9 @@
+SYNTHETIC INVOICE - PIPE TABLE
+Invoice No: SYN-PIPE-01
+Date: 2026-09-02
+Item | Qty | Unit Price | Amount
+Security camera | 2 | 75.00 | 150.00
+Setup service | 1 | 50.00 | 50.00
+Subtotal: 200.00
+Tax: 36.00
+Total: 236.00

@@ -1,9 +1,17 @@
 {
   "cases": [
     {
+      "accuracy_fields": [
+        "fields.invoice_number.value",
+        "fields.subtotal.value",
+        "fields.total.value",
+        "line_items.0.amount.value",
+        "line_items.0.description.value"
+      ],
       "content_type": "application/pdf",
       "description": "Single-page digital PDF with reconciling totals.",
       "expected": "expected/digital-standard.json",
+      "ground_truth": "ground-truth/digital-standard.txt",
       "id": "digital-standard",
       "source": "synthetic/invoices/digital-pdf/standard-invoice.pdf",
       "tags": [
@@ -13,9 +21,14 @@
       ]
     },
     {
+      "accuracy_fields": [
+        "fields.invoice_number.value",
+        "fields.total.value"
+      ],
       "content_type": "application/pdf",
       "description": "Digital PDF with no monetary fields; missing values must remain null.",
       "expected": "expected/digital-missing-fields.json",
+      "ground_truth": "ground-truth/digital-missing-fields.txt",
       "id": "digital-missing-fields",
       "source": "synthetic/invoices/digital-pdf/missing-fields.pdf",
       "tags": [
@@ -25,9 +38,13 @@
       ]
     },
     {
+      "accuracy_fields": [
+        "fields.total.value"
+      ],
       "content_type": "application/pdf",
       "description": "Digital PDF whose subtotal and tax do not reconcile with total.",
       "expected": "expected/digital-amount-mismatch.json",
+      "ground_truth": "ground-truth/digital-amount-mismatch.txt",
       "id": "digital-amount-mismatch",
       "source": "synthetic/invoices/digital-pdf/amount-mismatch.pdf",
       "tags": [
@@ -37,9 +54,13 @@
       ]
     },
     {
+      "accuracy_fields": [
+        "fields.subtotal.value"
+      ],
       "content_type": "application/pdf",
       "description": "The same amount appears as unit price and subtotal; evidence must retain its label.",
       "expected": "expected/digital-repeated-amounts.json",
+      "ground_truth": "ground-truth/digital-repeated-amounts.txt",
       "id": "digital-repeated-amounts",
       "source": "synthetic/invoices/digital-pdf/repeated-amounts.pdf",
       "tags": [
@@ -49,9 +70,13 @@
       ]
     },
     {
+      "accuracy_fields": [
+        "fields.total.value"
+      ],
       "content_type": "application/pdf",
       "description": "Two-page invoice with totals on the second page.",
       "expected": "expected/digital-multi-page.json",
+      "ground_truth": "ground-truth/digital-multi-page.txt",
       "id": "digital-multi-page",
       "source": "synthetic/invoices/digital-pdf/multi-page.pdf",
       "tags": [
@@ -61,9 +86,14 @@
       ]
     },
     {
+      "accuracy_fields": [
+        "line_items.0.description.value",
+        "line_items.1.description.value"
+      ],
       "content_type": "application/pdf",
       "description": "Two line items in a whitespace-aligned table.",
       "expected": "expected/digital-whitespace-table.json",
+      "ground_truth": "ground-truth/digital-whitespace-table.txt",
       "id": "digital-whitespace-table",
       "source": "synthetic/invoices/digital-pdf/whitespace-table.pdf",
       "tags": [
@@ -74,9 +104,14 @@
       ]
     },
     {
+      "accuracy_fields": [
+        "line_items.0.description.value",
+        "line_items.1.amount.value"
+      ],
       "content_type": "application/pdf",
       "description": "Two line items in a pipe-delimited table.",
       "expected": "expected/digital-pipe-table.json",
+      "ground_truth": "ground-truth/digital-pipe-table.txt",
       "id": "digital-pipe-table",
       "source": "synthetic/invoices/digital-pdf/pipe-table.pdf",
       "tags": [
@@ -87,9 +122,15 @@
       ]
     },
     {
+      "accuracy_fields": [
+        "fields.invoice_number.value",
+        "fields.total.value",
+        "line_items.0.amount.value"
+      ],
       "content_type": "application/pdf",
       "description": "Image-only PDF recognized through the OCR pipeline.",
       "expected": "expected/scanned-pdf.json",
+      "ground_truth": "ground-truth/scanned-pdf.txt",
       "id": "scanned-pdf",
       "source": "synthetic/invoices/scanned-pdf/scanned-invoice.pdf",
       "tags": [
@@ -99,9 +140,15 @@
       ]
     },
     {
+      "accuracy_fields": [
+        "fields.invoice_number.value",
+        "fields.total.value",
+        "line_items.0.amount.value"
+      ],
       "content_type": "image/png",
       "description": "PNG invoice recognized through the OCR pipeline.",
       "expected": "expected/image-png.json",
+      "ground_truth": "ground-truth/image-png.txt",
       "id": "image-png",
       "source": "synthetic/invoices/images/invoice.png",
       "tags": [
@@ -111,9 +158,15 @@
       ]
     },
     {
+      "accuracy_fields": [
+        "fields.invoice_number.value",
+        "fields.total.value",
+        "line_items.0.amount.value"
+      ],
       "content_type": "image/jpeg",
       "description": "JPEG invoice recognized through the OCR pipeline.",
       "expected": "expected/image-jpeg.json",
+      "ground_truth": "ground-truth/image-jpeg.txt",
       "id": "image-jpeg",
       "source": "synthetic/invoices/images/invoice.jpg",
       "tags": [

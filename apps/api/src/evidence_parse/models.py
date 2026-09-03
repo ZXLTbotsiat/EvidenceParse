@@ -107,8 +107,21 @@ class OcrTextBlock(BaseModel):
     confidence: float = Field(ge=0, le=1)
 
 
+class PreprocessingCandidate(BaseModel):
+    """Recognition measurements for one reproducible preprocessing candidate."""
+
+    variant: str
+    rotation_degrees: int = 0
+    deskew_degrees: float = 0
+    average_confidence: float = Field(default=0, ge=0, le=1)
+    quality_score: float = Field(default=0, ge=0)
+    text_region_count: int = Field(default=0, ge=0)
+    character_count: int = Field(default=0, ge=0)
+    selected: bool = False
+
+
 class PreprocessingPage(BaseModel):
-    """The reproducible image recipe selected for one OCR page."""
+    """The selected OCR recipe and comparable candidates for one page."""
 
     page: int = Field(ge=1)
     variant: str
@@ -116,6 +129,7 @@ class PreprocessingPage(BaseModel):
     deskew_degrees: float = 0
     average_confidence: float = Field(default=0, ge=0, le=1)
     candidate_count: int = Field(default=1, ge=1)
+    candidates: List[PreprocessingCandidate] = Field(default_factory=list)
 
 
 class DocumentParseResult(BaseModel):

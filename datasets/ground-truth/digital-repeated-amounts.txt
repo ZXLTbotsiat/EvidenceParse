@@ -1,0 +1,11 @@
+SYNTHETIC INVOICE - NOT FOR PAYMENT
+Invoice No: SYN-REPEAT-01
+Date: 2026-09-02
+Description: Document scanner
+Quantity: 1
+Unit Price: 200.00
+Line Amount: 200.00
+Subtotal: 200.00
+Tax: 36.00
+Total: 236.00
+No customer or personal data is present.

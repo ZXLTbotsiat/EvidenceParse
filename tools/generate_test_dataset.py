@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATASET_ROOT = ROOT / "datasets"
 SOURCE_ROOT = DATASET_ROOT / "synthetic"
 EXPECTED_ROOT = DATASET_ROOT / "expected"
+GROUND_TRUTH_ROOT = DATASET_ROOT / "ground-truth"
 
 
 @dataclass(frozen=True)
@@ -404,6 +405,56 @@ CASES = (
 )
 
 
+GROUND_TRUTH_LINES = {
+    "digital-standard": _invoice_lines(),
+    "digital-missing-fields": [
+        "SYNTHETIC INVOICE",
+        "Invoice No: SYN-MISSING-01",
+        "Date: 2026-09-02",
+    ],
+    "digital-amount-mismatch": _invoice_lines(
+        invoice_number="SYN-MISMATCH-01", total="250.00"
+    ),
+    "digital-repeated-amounts": _invoice_lines(invoice_number="SYN-REPEAT-01"),
+    "digital-multi-page": [
+        "SYNTHETIC INVOICE - PAGE 1 OF 2",
+        "Invoice No: SYN-MULTI-01",
+        "Date: 2026-09-02",
+        "Description: Document scanner",
+        "Amount: 200.00",
+        "SYNTHETIC INVOICE - PAGE 2 OF 2",
+        "Subtotal: 200.00",
+        "Tax: 36.00",
+        "Total: 236.00",
+    ],
+    "digital-whitespace-table": [
+        "SYNTHETIC INVOICE - WHITESPACE TABLE",
+        "Invoice No: SYN-TABLE-01",
+        "Date: 2026-09-02",
+        "Description          Quantity     Unit Price     Amount",
+        "Document scanner     1            120.00         120.00",
+        "Archive service      2            40.00          80.00",
+        "Subtotal: 200.00",
+        "Tax: 36.00",
+        "Total: 236.00",
+    ],
+    "digital-pipe-table": [
+        "SYNTHETIC INVOICE - PIPE TABLE",
+        "Invoice No: SYN-PIPE-01",
+        "Date: 2026-09-02",
+        "Item | Qty | Unit Price | Amount",
+        "Security camera | 2 | 75.00 | 150.00",
+        "Setup service | 1 | 50.00 | 50.00",
+        "Subtotal: 200.00",
+        "Tax: 36.00",
+        "Total: 236.00",
+    ],
+    "scanned-pdf": _invoice_lines(invoice_number="SYN-IMAGE-01"),
+    "image-png": _invoice_lines(invoice_number="SYN-IMAGE-01"),
+    "image-jpeg": _invoice_lines(invoice_number="SYN-IMAGE-01"),
+}
+
+
 def _write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     content = json.dumps(value, indent=2, sort_keys=True) + "\n"
@@ -417,8 +468,7 @@ def main() -> None:
         case.build(source_path)
         expected_path = EXPECTED_ROOT / f"{case.case_id}.json"
         _write_json(expected_path, case.expected)
-        manifest_cases.append(
-            {
+        definition = {
                 "id": case.case_id,
                 "description": case.description,
                 "source": case.source,
@@ -426,7 +476,20 @@ def main() -> None:
                 "expected": expected_path.relative_to(DATASET_ROOT).as_posix(),
                 "tags": list(case.tags),
             }
-        )
+        if case.case_id in GROUND_TRUTH_LINES:
+            ground_truth_path = GROUND_TRUTH_ROOT / f"{case.case_id}.txt"
+            ground_truth_path.parent.mkdir(parents=True, exist_ok=True)
+            ground_truth_path.write_text(
+                "\n".join(GROUND_TRUTH_LINES[case.case_id]) + "\n",
+                encoding="utf-8",
+            )
+            definition["ground_truth"] = ground_truth_path.relative_to(
+                DATASET_ROOT
+            ).as_posix()
+            definition["accuracy_fields"] = sorted(
+                path for path in case.expected["body"] if path.endswith(".value")
+            )
+        manifest_cases.append(definition)
 
     _write_json(
         DATASET_ROOT / "manifest.json",

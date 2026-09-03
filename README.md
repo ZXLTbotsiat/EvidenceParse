@@ -99,9 +99,12 @@ and [`docs/images/README.md`](docs/images/README.md).
 - **Adaptive preprocessing** — compare orientation, deskew, denoised contrast,
   and binarized candidates per page, then keep the OCR result with the strongest
   confidence and text coverage.
-- **Inspectable processing state** — keep the source document as the default
-  comparison view, with one button for the exact transient OCR input or the
-  text-layer regions used by a digital PDF.
+- **Inspectable processing state** — keep the source document as the default,
+  then compare the original-pixel, enhanced-grayscale, binarized, and finally
+  selected OCR inputs without retaining intermediate images.
+- **Reproducible accuracy metrics** — report character error rate (CER), word
+  error rate (WER), and exact field accuracy against versioned ground truth,
+  with raw counts for correctly weighted totals.
 - **Batch processing** — upload multiple documents or a ZIP archive and inspect
   progress and results per file.
 - **Five interface languages** — switch the complete review workspace between
@@ -147,8 +150,8 @@ before the API starts.
 2. Select **General OCR** or **Professional Invoice OCR**.
 3. Start recognition and wait for the document or batch to complete.
 4. Click any OCR text block to locate and highlight it in the original file.
-5. Select **View OCR input** to inspect the chosen intermediate image, then return
-   to the untouched source with one click.
+5. Select **View processing state** to compare all three OCR candidates with the
+   final selection, then return to the untouched source with one click.
 6. For invoice results, review extracted fields, validations, and audit history.
 
 ZIP members are expanded in memory and are never written to a temporary
@@ -191,6 +194,7 @@ GET  /api/v1/documents/{document_id}/review-events
 POST /api/v1/batches
 GET  /api/v1/batches/{batch_id}
 POST /api/v1/previews/pdf-page
+POST /api/v1/previews/ocr-page
 ```
 
 Correction and review requests include `expected_revision`. A stale client
@@ -364,6 +368,12 @@ The benchmark is regression evidence for the included synthetic fixtures. It
 is not a claim about accuracy on unseen or production documents. Dataset
 coverage and provenance are documented in [`datasets/README.md`](datasets/README.md)
 and [`benchmarks/README.md`](benchmarks/README.md).
+
+The latest committed synthetic run reports 99.95% character accuracy
+(CER 0.05%), 99.37% word accuracy (WER 0.63%), and 100% exact accuracy across
+23 declared fields. These figures describe only the included synthetic corpus;
+use a representative, independently labelled dataset before making production
+accuracy claims.
 
 ## Security and data handling
 

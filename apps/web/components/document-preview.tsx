@@ -1,15 +1,24 @@
 "use client";
 
-import { ChangeEvent, DragEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { renderOcrPage, renderPdfPage } from "../lib/api";
 import { useI18n } from "../lib/i18n";
 import type { MessageKey } from "../lib/i18n-catalog";
-import type { OcrTextBlock, PageContent, PreprocessingPage } from "../lib/types";
+import type { OcrTextBlock, PageContent, PreprocessingCandidate, PreprocessingPage } from "../lib/types";
 
 const VARIANT_KEYS: Record<PreprocessingPage["variant"], MessageKey> = {
   original: "preview.variant.original",
   enhanced: "preview.variant.enhanced",
   binary: "preview.variant.binary",
+};
+
+type CandidateView = PreprocessingCandidate["variant"] | "selected";
+
+const CANDIDATE_VIEW_KEYS: Record<CandidateView, MessageKey> = {
+  original: "preview.candidate.original",
+  enhanced: "preview.candidate.enhanced",
+  binary: "preview.candidate.binary",
+  selected: "preview.candidate.selected",
 };
 
 type Props = {
@@ -36,6 +45,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
   const [ocrPreviewUrl, setOcrPreviewUrl] = useState("");
   const [ocrPreviewError, setOcrPreviewError] = useState("");
   const [previewMode, setPreviewMode] = useState<"source" | "ocr" | "textLayer">("source");
+  const [candidateView, setCandidateView] = useState<CandidateView>("selected");
   const [dragActive, setDragActive] = useState(false);
   const isPdf = Boolean(file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")));
 
@@ -65,7 +75,29 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
     setImageSize({ width: 0, height: 0 });
     setStageSize(null);
     setPreviewMode("source");
+    setCandidateView("selected");
   }, [fileUrl, page]);
+
+  const { candidates, selectedCandidate } = useMemo(() => {
+    const fallback: PreprocessingCandidate | undefined = preprocessing ? {
+      variant: preprocessing.variant,
+      rotation_degrees: preprocessing.rotation_degrees,
+      deskew_degrees: preprocessing.deskew_degrees,
+      average_confidence: preprocessing.average_confidence,
+      quality_score: preprocessing.average_confidence,
+      text_region_count: pageBlocks.length,
+      character_count: pageBlocks.reduce((total, block) => total + block.text.replace(/\s/g, "").length, 0),
+      selected: true,
+    } : undefined;
+    const available = preprocessing?.candidates?.length ? preprocessing.candidates : (fallback ? [fallback] : []);
+    return {
+      candidates: available,
+      selectedCandidate: available.find((candidate) => candidate.selected) ?? fallback,
+    };
+  }, [pageBlocks, preprocessing]);
+  const activeCandidate = candidateView === "selected"
+    ? selectedCandidate
+    : candidates.find((candidate) => candidate.variant === candidateView) ?? selectedCandidate;
 
   useEffect(() => {
     if (!isPdf || !file) {
@@ -98,7 +130,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
   }, [apiKey, file, isPdf, page, t]);
 
   useEffect(() => {
-    if (previewMode !== "ocr" || !file || !preprocessing) return;
+    if (previewMode !== "ocr" || !file || !activeCandidate) return;
     let cancelled = false;
     let previewUrl = "";
 
@@ -106,7 +138,11 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
       try {
         setOcrPreviewUrl("");
         setOcrPreviewError("");
-        const preview = await renderOcrPage(file!, preprocessing!, apiKey);
+        const preview = await renderOcrPage(
+          file!,
+          { ...activeCandidate!, page: preprocessing!.page },
+          apiKey,
+        );
         if (cancelled) return;
         previewUrl = URL.createObjectURL(preview);
         setOcrPreviewUrl(previewUrl);
@@ -120,7 +156,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
       cancelled = true;
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-  }, [apiKey, file, preprocessing, previewMode, t]);
+  }, [activeCandidate, apiKey, file, preprocessing, previewMode, t]);
 
   useEffect(() => {
     if (!selectedBlock || !stageSize) return;
@@ -207,6 +243,28 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
           <span className="page-badge">{t("preview.page", { page })}</span>
         </div>
       </div>
+      {previewMode === "ocr" && preprocessing && (
+        <div className="candidate-tabs" role="tablist" aria-label={t("preview.candidateTabs")}>
+          {(Object.keys(CANDIDATE_VIEW_KEYS) as CandidateView[]).map((view) => {
+            const candidate = view === "selected"
+              ? selectedCandidate
+              : candidates.find((item) => item.variant === view);
+            return (
+              <button
+                key={view}
+                role="tab"
+                aria-selected={candidateView === view}
+                className={candidateView === view ? "active" : ""}
+                disabled={!candidate}
+                onClick={() => setCandidateView(view)}
+              >
+                <span>{t(CANDIDATE_VIEW_KEYS[view])}</span>
+                {candidate?.selected && <small>{t("preview.selectedBadge")}</small>}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <div className="preview-canvas" ref={canvasRef}>
         {previewMode === "ocr" ? (
           ocrPreviewError ? <div className="preview-load-state">{ocrPreviewError}</div> : (
@@ -275,12 +333,21 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
       </div>
       {previewMode === "ocr" && preprocessing && (
         <div className="preprocessing-note">
-          <div><span>{t("preview.ocrView")}</span><strong>{t(VARIANT_KEYS[preprocessing.variant])}</strong></div>
-          <small>{t("preview.recipe", {
+          <div><span>{t("preview.ocrView")}</span><strong>{activeCandidate ? t(VARIANT_KEYS[activeCandidate.variant]) : t(VARIANT_KEYS[preprocessing.variant])}</strong></div>
+          <small>{activeCandidate ? t("preview.candidateMetrics", {
+            confidence: Math.round(activeCandidate.average_confidence * 100),
+            score: activeCandidate.quality_score.toFixed(3),
+            regions: activeCandidate.text_region_count,
+            characters: activeCandidate.character_count,
+          }) : t("preview.recipe", {
             rotation: preprocessing.rotation_degrees,
             deskew: preprocessing.deskew_degrees.toFixed(1),
             confidence: Math.round(preprocessing.average_confidence * 100),
           })}</small>
+          {activeCandidate && <small>{t("preview.geometry", {
+            rotation: activeCandidate.rotation_degrees,
+            deskew: activeCandidate.deskew_degrees.toFixed(1),
+          })}</small>}
         </div>
       )}
       {previewMode === "textLayer" && (

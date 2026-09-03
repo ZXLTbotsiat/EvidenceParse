@@ -59,7 +59,10 @@ class DocumentApplicationService:
             needs_source_content = not existing.pages and not existing.text_blocks
             needs_preprocessing = (
                 existing.source_kind is not SourceKind.DIGITAL_PDF
-                and not existing.preprocessing
+                and (
+                    not existing.preprocessing
+                    or any(not page.candidates for page in existing.preprocessing)
+                )
             )
             if needs_source_content or needs_preprocessing:
                 enriched = self.parser.parse(filename, content_type, content, schema.name)

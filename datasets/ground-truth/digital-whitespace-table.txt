@@ -1,0 +1,9 @@
+SYNTHETIC INVOICE - WHITESPACE TABLE
+Invoice No: SYN-TABLE-01
+Date: 2026-09-02
+Description          Quantity     Unit Price     Amount
+Document scanner     1            120.00         120.00
+Archive service      2            40.00          80.00
+Subtotal: 200.00
+Tax: 36.00
+Total: 236.00

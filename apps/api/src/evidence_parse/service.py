@@ -11,6 +11,7 @@ from evidence_parse.models import (
     DocumentParseResult,
     OcrTextBlock,
     PageContent,
+    PreprocessingCandidate,
     PreprocessingPage,
     SourceKind,
 )
@@ -117,7 +118,7 @@ class DocumentParser:
         spans: List[TextSpan] = []
         preprocessing: List[PreprocessingPage] = []
         for prepared_page in prepared_pages:
-            page_contents, page_spans, selected, average_confidence = self._recognize_best(
+            page_contents, page_spans, selected, candidate_metrics = self._recognize_best(
                 prepared_page
             )
             pages.extend(page_contents)
@@ -128,8 +129,13 @@ class DocumentParser:
                     variant=selected.variant,
                     rotation_degrees=selected.prepared.rotation_degrees,
                     deskew_degrees=selected.prepared.deskew_degrees,
-                    average_confidence=average_confidence,
+                    average_confidence=next(
+                        metric.average_confidence
+                        for metric in candidate_metrics
+                        if metric.selected
+                    ),
                     candidate_count=7,
+                    candidates=candidate_metrics,
                 )
             )
         result = self._build_result(
@@ -151,7 +157,12 @@ class DocumentParser:
 
     def _recognize_best(
         self, source: PreparedImage
-    ) -> tuple[List[PageContent], List[TextSpan], ImageCandidate, float]:
+    ) -> tuple[
+        List[PageContent],
+        List[TextSpan],
+        ImageCandidate,
+        List[PreprocessingCandidate],
+    ]:
         """Select orientation and pixels by OCR quality, preserving the original source."""
 
         orientation_results = []
@@ -190,10 +201,38 @@ class DocumentParser:
                 selected = candidate_result
                 selected_score = score
         candidate, pages, spans = selected
+        metrics = [
+            self._candidate_metrics(
+                evaluated_candidate,
+                evaluated_spans,
+                selected=evaluated_candidate == candidate,
+            )
+            for evaluated_candidate, _, evaluated_spans in evaluated
+        ]
+        return pages, spans, candidate, metrics
+
+    @classmethod
+    def _candidate_metrics(
+        cls,
+        candidate: ImageCandidate,
+        spans: List[TextSpan],
+        *,
+        selected: bool,
+    ) -> PreprocessingCandidate:
+        character_count = sum(len("".join(span.text.split())) for span in spans)
         average_confidence = (
-            round(sum(span.confidence for span in spans) / len(spans), 4) if spans else 0
+            sum(span.confidence for span in spans) / len(spans) if spans else 0
         )
-        return pages, spans, candidate, average_confidence
+        return PreprocessingCandidate(
+            variant=candidate.variant,
+            rotation_degrees=candidate.prepared.rotation_degrees,
+            deskew_degrees=candidate.prepared.deskew_degrees,
+            average_confidence=round(average_confidence, 4),
+            quality_score=round(cls._recognition_score(spans), 4),
+            text_region_count=len(spans),
+            character_count=character_count,
+            selected=selected,
+        )
 
     @staticmethod
     def _recognition_score(spans: List[TextSpan]) -> float:

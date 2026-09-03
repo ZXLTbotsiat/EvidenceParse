@@ -6,6 +6,11 @@ All notable changes to EvidenceParse are documented here.
 
 ### Added
 
+- Added candidate-by-candidate OCR inspection for original pixels, enhanced
+  grayscale, binarization, and the final selected input, including confidence,
+  quality score, region count, and character count.
+- Added versioned ground-truth transcripts plus weighted CER, WER, and exact
+  field accuracy to the synthetic benchmark reports.
 - Added adaptive per-page OCR preprocessing with automatic right-angle orientation,
   small-angle deskew, denoised contrast, and Otsu binarization candidates.
 - Added a five-language **View OCR input** interaction that temporarily shows the

@@ -113,6 +113,41 @@ def test_duplicate_scan_backfills_preprocessing_without_replacing_results(
     assert duplicate["document_id"] == first["document_id"]
 
 
+def test_duplicate_scan_backfills_candidate_metrics_for_legacy_recipe(
+    client: TestClient,
+) -> None:
+    image = Image.new("RGB", (640, 420), "white")
+    ImageDraw.Draw(image).text(
+        (50, 80), f"LEGACY CANDIDATES {uuid.uuid4().hex[:8]}", fill="black"
+    )
+    output = BytesIO()
+    image.save(output, format="PNG")
+    content = output.getvalue()
+    first = _image_upload(client, content).json()
+    database = client.app.state.database
+    with database.engine.begin() as connection:
+        row = connection.execute(
+            text("SELECT result_json FROM documents WHERE id = :id"),
+            {"id": first["document_id"]},
+        ).scalar_one()
+        payload = json.loads(row) if isinstance(row, str) else row
+        payload["preprocessing"][0].pop("candidates", None)
+        connection.execute(
+            text("UPDATE documents SET result_json = :payload WHERE id = :id"),
+            {"payload": json.dumps(payload), "id": first["document_id"]},
+        )
+
+    duplicate = _image_upload(client, content, "legacy-candidates-copy.png").json()
+
+    candidates = duplicate["preprocessing"][0]["candidates"]
+    assert [candidate["variant"] for candidate in candidates] == [
+        "original",
+        "enhanced",
+        "binary",
+    ]
+    assert sum(candidate["selected"] for candidate in candidates) == 1
+
+
 def test_human_correction_revalidates_and_creates_an_audit_event(
     client: TestClient,
 ) -> None:

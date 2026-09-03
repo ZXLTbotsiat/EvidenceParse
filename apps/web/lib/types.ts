@@ -11,6 +11,17 @@ export type OcrTextBlock = {
 
 export type PageContent = { page: number; width: number; height: number; text: string };
 
+export type PreprocessingCandidate = {
+  variant: "original" | "enhanced" | "binary";
+  rotation_degrees: number;
+  deskew_degrees: number;
+  average_confidence: number;
+  quality_score: number;
+  text_region_count: number;
+  character_count: number;
+  selected: boolean;
+};
+
 export type PreprocessingPage = {
   page: number;
   variant: "original" | "enhanced" | "binary";
@@ -18,6 +29,7 @@ export type PreprocessingPage = {
   deskew_degrees: number;
   average_confidence: number;
   candidate_count: number;
+  candidates: PreprocessingCandidate[];
 };
 
 export type FieldResult = {

@@ -14,6 +14,7 @@ file keeps the source and license documented beside it.
 datasets/
 ├── manifest.json                 # Machine-readable case index
 ├── expected/                     # Observable API expectations per case
+├── ground-truth/                 # Reference transcripts for CER and WER
 ├── external/                     # Licensed public samples for manual evaluation
 └── synthetic/
     ├── invoices/
@@ -26,6 +27,10 @@ datasets/
 The manifest is the source of truth used by the integration test. Expectations
 assert public API behavior rather than private implementation details, so the
 corpus remains useful while OCR and extraction providers evolve.
+
+Each accuracy-enabled manifest case points to a transcript and explicitly lists
+the structured field paths included in exact field accuracy. Unsupported and
+corrupt-file cases have no ground truth and do not affect accuracy denominators.
 
 The same manifest drives `tools/run_benchmark.py`. Versioned benchmark reports
 live under `benchmarks/results`; see `benchmarks/README.md` for their scope and

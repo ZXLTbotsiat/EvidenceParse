@@ -1,4 +1,6 @@
-import type { BatchJob, ParseResult, PreprocessingPage, ReviewEvent } from "./types";
+import type { BatchJob, ParseResult, PreprocessingCandidate, PreprocessingPage, ReviewEvent } from "./types";
+
+type OcrPreviewRecipe = PreprocessingCandidate & { page: number };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -37,7 +39,7 @@ export async function renderPdfPage(file: File, page: number, apiKey: string) {
 
 export async function renderOcrPage(
   file: File,
-  recipe: PreprocessingPage,
+  recipe: PreprocessingPage | OcrPreviewRecipe,
   apiKey: string,
 ) {
   const body = new FormData();

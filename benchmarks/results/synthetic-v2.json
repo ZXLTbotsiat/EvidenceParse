@@ -1,7 +1,7 @@
 {
   "corpus_name": "EvidenceParse synthetic invoice regression corpus",
   "corpus_version": 2,
-  "generated_at": "2026-09-03T01:13:00.785261+00:00",
+  "generated_at": "2026-09-03T08:10:18.384525+00:00",
   "scope": "Synthetic regression accuracy only; this report is not evidence of real-world document accuracy.",
   "summary": {
     "total_cases": 12,
@@ -10,7 +10,18 @@
     "passed_assertions": 77,
     "case_pass_rate": 1.0,
     "assertion_pass_rate": 1.0,
-    "duration_ms": 4461.88
+    "duration_ms": 19526.16,
+    "accuracy": {
+      "character_errors": 1,
+      "character_count": 2143,
+      "cer": 0.0004666355576294914,
+      "word_errors": 2,
+      "word_count": 318,
+      "wer": 0.006289308176100629,
+      "correct_fields": 23,
+      "field_count": 23,
+      "field_accuracy": 1.0
+    }
   },
   "by_tag": {
     "corrupt": {
@@ -20,7 +31,18 @@
       "passed_assertions": 2,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 4.46
+      "duration_ms": 11.83,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 0,
+        "cer": null,
+        "word_errors": 0,
+        "word_count": 0,
+        "wer": null,
+        "correct_fields": 0,
+        "field_count": 0,
+        "field_accuracy": null
+      }
     },
     "digital-pdf": {
       "total_cases": 7,
@@ -29,7 +51,18 @@
       "passed_assertions": 48,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 95.81
+      "duration_ms": 86.4,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 1420,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 213,
+        "wer": 0.0,
+        "correct_fields": 14,
+        "field_count": 14,
+        "field_accuracy": 1.0
+      }
     },
     "evidence": {
       "total_cases": 1,
@@ -38,7 +71,18 @@
       "passed_assertions": 4,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 10.88
+      "duration_ms": 9.51,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 242,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 1,
+        "field_count": 1,
+        "field_accuracy": 1.0
+      }
     },
     "happy-path": {
       "total_cases": 1,
@@ -47,7 +91,18 @@
       "passed_assertions": 12,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 34.48
+      "duration_ms": 35.04,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 242,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 5,
+        "field_count": 5,
+        "field_accuracy": 1.0
+      }
     },
     "invoice": {
       "total_cases": 10,
@@ -56,7 +111,18 @@
       "passed_assertions": 73,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 4452.23
+      "duration_ms": 19510.76,
+      "accuracy": {
+        "character_errors": 1,
+        "character_count": 2143,
+        "cer": 0.0004666355576294914,
+        "word_errors": 2,
+        "word_count": 318,
+        "wer": 0.006289308176100629,
+        "correct_fields": 23,
+        "field_count": 23,
+        "field_accuracy": 1.0
+      }
     },
     "jpeg": {
       "total_cases": 1,
@@ -65,7 +131,18 @@
       "passed_assertions": 8,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 880.77
+      "duration_ms": 5588.01,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 241,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 3,
+        "field_count": 3,
+        "field_accuracy": 1.0
+      }
     },
     "missing-data": {
       "total_cases": 1,
@@ -74,7 +151,18 @@
       "passed_assertions": 6,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 9.07
+      "duration_ms": 8.19,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 61,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 7,
+        "wer": 0.0,
+        "correct_fields": 2,
+        "field_count": 2,
+        "field_accuracy": 1.0
+      }
     },
     "multi-line-item": {
       "total_cases": 2,
@@ -83,7 +171,18 @@
       "passed_assertions": 16,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 20.48
+      "duration_ms": 16.73,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 439,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 71,
+        "wer": 0.0,
+        "correct_fields": 4,
+        "field_count": 4,
+        "field_accuracy": 1.0
+      }
     },
     "multi-page": {
       "total_cases": 1,
@@ -92,7 +191,18 @@
       "passed_assertions": 6,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 9.57
+      "duration_ms": 8.62,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 192,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 30,
+        "wer": 0.0,
+        "correct_fields": 1,
+        "field_count": 1,
+        "field_accuracy": 1.0
+      }
     },
     "negative": {
       "total_cases": 2,
@@ -101,7 +211,18 @@
       "passed_assertions": 4,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 9.65
+      "duration_ms": 15.4,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 0,
+        "cer": null,
+        "word_errors": 0,
+        "word_count": 0,
+        "wer": null,
+        "correct_fields": 0,
+        "field_count": 0,
+        "field_accuracy": null
+      }
     },
     "ocr": {
       "total_cases": 3,
@@ -110,7 +231,18 @@
       "passed_assertions": 25,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 4356.42
+      "duration_ms": 19424.36,
+      "accuracy": {
+        "character_errors": 1,
+        "character_count": 723,
+        "cer": 0.0013831258644536654,
+        "word_errors": 2,
+        "word_count": 105,
+        "wer": 0.01904761904761905,
+        "correct_fields": 9,
+        "field_count": 9,
+        "field_accuracy": 1.0
+      }
     },
     "png": {
       "total_cases": 1,
@@ -119,7 +251,18 @@
       "passed_assertions": 8,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 1347.14
+      "duration_ms": 6340.4,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 241,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 3,
+        "field_count": 3,
+        "field_accuracy": 1.0
+      }
     },
     "scanned-pdf": {
       "total_cases": 1,
@@ -128,7 +271,18 @@
       "passed_assertions": 9,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 2128.51
+      "duration_ms": 7495.95,
+      "accuracy": {
+        "character_errors": 1,
+        "character_count": 241,
+        "cer": 0.004149377593360996,
+        "word_errors": 2,
+        "word_count": 35,
+        "wer": 0.05714285714285714,
+        "correct_fields": 3,
+        "field_count": 3,
+        "field_accuracy": 1.0
+      }
     },
     "table-layout": {
       "total_cases": 2,
@@ -137,7 +291,18 @@
       "passed_assertions": 16,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 20.48
+      "duration_ms": 16.73,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 439,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 71,
+        "wer": 0.0,
+        "correct_fields": 4,
+        "field_count": 4,
+        "field_accuracy": 1.0
+      }
     },
     "unsupported": {
       "total_cases": 1,
@@ -146,7 +311,18 @@
       "passed_assertions": 2,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 5.19
+      "duration_ms": 3.57,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 0,
+        "cer": null,
+        "word_errors": 0,
+        "word_count": 0,
+        "wer": null,
+        "correct_fields": 0,
+        "field_count": 0,
+        "field_accuracy": null
+      }
     },
     "validation": {
       "total_cases": 1,
@@ -155,7 +331,18 @@
       "passed_assertions": 4,
       "case_pass_rate": 1.0,
       "assertion_pass_rate": 1.0,
-      "duration_ms": 11.33
+      "duration_ms": 8.31,
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 244,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 1,
+        "field_count": 1,
+        "field_accuracy": 1.0
+      }
     }
   },
   "cases": [
@@ -166,7 +353,7 @@
         "digital-pdf",
         "happy-path"
       ],
-      "duration_ms": 34.48,
+      "duration_ms": 35.04,
       "passed": true,
       "assertions": [
         {
@@ -241,7 +428,18 @@
           "actual": true,
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 242,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 5,
+        "field_count": 5,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "digital-missing-fields",
@@ -250,7 +448,7 @@
         "digital-pdf",
         "missing-data"
       ],
-      "duration_ms": 9.07,
+      "duration_ms": 8.19,
       "passed": true,
       "assertions": [
         {
@@ -289,7 +487,18 @@
           "actual": null,
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 61,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 7,
+        "wer": 0.0,
+        "correct_fields": 2,
+        "field_count": 2,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "digital-amount-mismatch",
@@ -298,7 +507,7 @@
         "digital-pdf",
         "validation"
       ],
-      "duration_ms": 11.33,
+      "duration_ms": 8.31,
       "passed": true,
       "assertions": [
         {
@@ -325,7 +534,18 @@
           "actual": false,
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 244,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 1,
+        "field_count": 1,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "digital-repeated-amounts",
@@ -334,7 +554,7 @@
         "digital-pdf",
         "evidence"
       ],
-      "duration_ms": 10.88,
+      "duration_ms": 9.51,
       "passed": true,
       "assertions": [
         {
@@ -361,7 +581,18 @@
           "actual": "digital_pdf",
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 242,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 1,
+        "field_count": 1,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "digital-multi-page",
@@ -370,7 +601,7 @@
         "digital-pdf",
         "multi-page"
       ],
-      "duration_ms": 9.57,
+      "duration_ms": 8.62,
       "passed": true,
       "assertions": [
         {
@@ -409,7 +640,18 @@
           "actual": true,
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 192,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 30,
+        "wer": 0.0,
+        "correct_fields": 1,
+        "field_count": 1,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "digital-whitespace-table",
@@ -419,7 +661,7 @@
         "table-layout",
         "multi-line-item"
       ],
-      "duration_ms": 10.36,
+      "duration_ms": 8.84,
       "passed": true,
       "assertions": [
         {
@@ -470,7 +712,18 @@
           "actual": true,
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 222,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 31,
+        "wer": 0.0,
+        "correct_fields": 2,
+        "field_count": 2,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "digital-pipe-table",
@@ -480,7 +733,7 @@
         "table-layout",
         "multi-line-item"
       ],
-      "duration_ms": 10.12,
+      "duration_ms": 7.89,
       "passed": true,
       "assertions": [
         {
@@ -531,7 +784,18 @@
           "actual": true,
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 217,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 40,
+        "wer": 0.0,
+        "correct_fields": 2,
+        "field_count": 2,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "scanned-pdf",
@@ -540,7 +804,7 @@
         "scanned-pdf",
         "ocr"
       ],
-      "duration_ms": 2128.51,
+      "duration_ms": 7495.95,
       "passed": true,
       "assertions": [
         {
@@ -597,7 +861,18 @@
           "actual": true,
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 1,
+        "character_count": 241,
+        "cer": 0.004149377593360996,
+        "word_errors": 2,
+        "word_count": 35,
+        "wer": 0.05714285714285714,
+        "correct_fields": 3,
+        "field_count": 3,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "image-png",
@@ -606,7 +881,7 @@
         "png",
         "ocr"
       ],
-      "duration_ms": 1347.14,
+      "duration_ms": 6340.4,
       "passed": true,
       "assertions": [
         {
@@ -657,7 +932,18 @@
           "actual": true,
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 241,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 3,
+        "field_count": 3,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "image-jpeg",
@@ -666,7 +952,7 @@
         "jpeg",
         "ocr"
       ],
-      "duration_ms": 880.77,
+      "duration_ms": 5588.01,
       "passed": true,
       "assertions": [
         {
@@ -717,7 +1003,18 @@
           "actual": true,
           "passed": true
         }
-      ]
+      ],
+      "accuracy": {
+        "character_errors": 0,
+        "character_count": 241,
+        "cer": 0.0,
+        "word_errors": 0,
+        "word_count": 35,
+        "wer": 0.0,
+        "correct_fields": 3,
+        "field_count": 3,
+        "field_accuracy": 1.0
+      }
     },
     {
       "case_id": "unsupported-file",
@@ -725,7 +1022,7 @@
         "negative",
         "unsupported"
       ],
-      "duration_ms": 5.19,
+      "duration_ms": 3.57,
       "passed": true,
       "assertions": [
         {
@@ -740,7 +1037,8 @@
           "actual": "Only PDF, JPG, JPEG, and PNG are supported.",
           "passed": true
         }
-      ]
+      ],
+      "accuracy": null
     },
     {
       "case_id": "corrupt-pdf",
@@ -748,7 +1046,7 @@
         "negative",
         "corrupt"
       ],
-      "duration_ms": 4.46,
+      "duration_ms": 11.83,
       "passed": true,
       "assertions": [
         {
@@ -763,7 +1061,8 @@
           "actual": "The PDF could not be parsed.",
           "passed": true
         }
-      ]
+      ],
+      "accuracy": null
     }
   ]
 }
