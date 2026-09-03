@@ -13,3 +13,9 @@ coverage/
 uploads/
 data/
 *.log
+
+# Public OCR evaluation files are downloaded locally with the documented tool.
+datasets/external/ocr-evaluation/*.pdf
+datasets/external/ocr-evaluation/*.png
+datasets/external/ocr-evaluation/*.jpg
+datasets/external/ocr-evaluation/*.jpeg

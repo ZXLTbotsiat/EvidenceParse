@@ -4,6 +4,10 @@ All notable changes to EvidenceParse are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Added a reproducible, checksum-pinned downloader and source guide for eight public OCR evaluation files.
+
 ### Changed
 
 - The empty source-preview panel now accepts drag-and-drop, click, and keyboard file selection.

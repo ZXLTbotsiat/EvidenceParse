@@ -1,8 +1,12 @@
 # Test dataset
 
-This directory is the versioned regression corpus for EvidenceParse. Every
-document is synthetic, contains no customer or personal data, and is covered by
-the repository's MIT license.
+This directory contains the versioned regression corpus for EvidenceParse.
+Documents referenced by `manifest.json` are synthetic, contain no customer or
+personal data, and are covered by the repository's MIT license.
+
+`external/` is a separate, manually curated evaluation set downloaded from
+public sources. It is not part of the automated regression manifest and each
+file keeps the source and license documented beside it.
 
 ## Layout
 
@@ -10,6 +14,7 @@ the repository's MIT license.
 datasets/
 ├── manifest.json                 # Machine-readable case index
 ├── expected/                     # Observable API expectations per case
+├── external/                     # Licensed public samples for manual evaluation
 └── synthetic/
     ├── invoices/
     │   ├── digital-pdf/          # Text-layer PDFs and edge cases
