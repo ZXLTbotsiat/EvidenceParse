@@ -256,7 +256,7 @@ export default function Home() {
         {isBatchSelection && (!viewingBatchItem || !file) ? (
           <BatchSourcePreview selectedFiles={selectedFiles} batch={batch} />
         ) : (
-          <DocumentPreview file={file} fileUrl={fileUrl} page={page} pageInfo={result?.pages.find((item) => item.page === page)} selectedBlock={selectedBlock} preprocessing={result?.preprocessing.find((item) => item.page === page)} apiKey={apiKey} onFilesSelect={selectFiles} />
+          <DocumentPreview file={file} fileUrl={fileUrl} page={page} pageInfo={result?.pages.find((item) => item.page === page)} selectedBlock={selectedBlock} pageBlocks={result?.text_blocks.filter((item) => item.page === page)} preprocessing={result?.preprocessing.find((item) => item.page === page)} sourceKind={result?.source_kind} apiKey={apiKey} onFilesSelect={selectFiles} />
         )}
         <div className="result-panel">
           <div className="panel-title result-title">

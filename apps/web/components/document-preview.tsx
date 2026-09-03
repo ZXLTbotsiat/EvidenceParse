@@ -18,12 +18,14 @@ type Props = {
   page: number;
   pageInfo?: PageContent;
   selectedBlock?: OcrTextBlock | null;
+  pageBlocks?: OcrTextBlock[];
   preprocessing?: PreprocessingPage;
+  sourceKind?: string;
   apiKey: string;
   onFilesSelect: (files: File[]) => void;
 };
 
-export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, preprocessing, apiKey, onFilesSelect }: Props) {
+export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, pageBlocks = [], preprocessing, sourceKind, apiKey, onFilesSelect }: Props) {
   const { t } = useI18n();
   const canvasRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLSpanElement>(null);
@@ -33,7 +35,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
   const [pdfError, setPdfError] = useState("");
   const [ocrPreviewUrl, setOcrPreviewUrl] = useState("");
   const [ocrPreviewError, setOcrPreviewError] = useState("");
-  const [previewMode, setPreviewMode] = useState<"source" | "ocr">("source");
+  const [previewMode, setPreviewMode] = useState<"source" | "ocr" | "textLayer">("source");
   const [dragActive, setDragActive] = useState(false);
   const isPdf = Boolean(file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")));
 
@@ -183,18 +185,23 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
     width: `${((selectedBlock.bbox.x1 - selectedBlock.bbox.x0) / pageInfo.width) * 100}%`,
     height: `${((selectedBlock.bbox.y1 - selectedBlock.bbox.y0) / pageInfo.height) * 100}%`,
   } : undefined;
+  const processingMode = preprocessing ? "ocr" : sourceKind === "digital_pdf" ? "textLayer" : null;
+  const processingViewOpen = previewMode !== "source";
+  const headingKey = previewMode === "ocr"
+    ? "preview.ocrView"
+    : previewMode === "textLayer" ? "preview.textLayerView" : "preview.original";
 
   return (
     <div className="document-preview">
       <div className="panel-title">
-        <div><span className="kicker">{t(previewMode === "ocr" ? "preview.ocrView" : "preview.original")}</span><strong title={file.name}>{file.name}</strong></div>
+        <div><span className="kicker">{t(headingKey)}</span><strong title={file.name}>{file.name}</strong></div>
         <div className="preview-heading-actions">
-          {preprocessing && (
+          {processingMode && (
             <button
-              className={`ocr-preview-toggle ${previewMode === "ocr" ? "active" : ""}`}
-              onClick={() => setPreviewMode((current) => current === "source" ? "ocr" : "source")}
+              className={`ocr-preview-toggle ${processingViewOpen ? "active" : ""}`}
+              onClick={() => setPreviewMode((current) => current === "source" ? processingMode : "source")}
             >
-              {previewMode === "ocr" ? t("preview.showOriginal") : t("preview.showOcrInput")}
+              {processingViewOpen ? t("preview.showOriginal") : t("preview.showProcessing")}
             </button>
           )}
           <span className="page-badge">{t("preview.page", { page })}</span>
@@ -231,6 +238,18 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
                     height: event.currentTarget.naturalHeight,
                   })}
                 />
+                {previewMode === "textLayer" && pageInfo && pageBlocks.map((block, index) => (
+                  <span
+                    className="text-layer-overlay"
+                    key={`${block.page}-${index}-${block.text}`}
+                    style={{
+                      left: `${(block.bbox.x0 / pageInfo.width) * 100}%`,
+                      top: `${(block.bbox.y0 / pageInfo.height) * 100}%`,
+                      width: `${((block.bbox.x1 - block.bbox.x0) / pageInfo.width) * 100}%`,
+                      height: `${((block.bbox.y1 - block.bbox.y0) / pageInfo.height) * 100}%`,
+                    }}
+                  />
+                ))}
                 {overlay && <span ref={overlayRef} className="evidence-overlay" style={overlay} />}
               </div>
             ) : <span className="pdf-loading-inline">{t("preview.rendering", { page })}</span>
@@ -262,6 +281,12 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
             deskew: preprocessing.deskew_degrees.toFixed(1),
             confidence: Math.round(preprocessing.average_confidence * 100),
           })}</small>
+        </div>
+      )}
+      {previewMode === "textLayer" && (
+        <div className="preprocessing-note text-layer-note">
+          <div><span>{t("preview.textLayerView")}</span><strong>{t("preview.textLayerDirect")}</strong></div>
+          <small>{t("preview.textLayerHint", { count: pageBlocks.length })}</small>
         </div>
       )}
       {selectedBlock && (

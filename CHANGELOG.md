@@ -10,6 +10,8 @@ All notable changes to EvidenceParse are documented here.
   small-angle deskew, denoised contrast, and Otsu binarization candidates.
 - Added a five-language **View OCR input** interaction that temporarily shows the
   exact selected intermediate image while keeping the original source as default.
+- Digital PDFs now expose the text-layer regions used for extraction through the
+  same always-visible processing-state interaction.
 - Added persisted preprocessing recipes and a transient, no-store preview endpoint.
 - Added a persistent whole-interface language switcher for English, Simplified Chinese, Japanese, German, and French.
 - Added real difficult-document showcases for skewed two-column scans, noisy typewriter text, illustrated old pages, and a clearly labelled synthetic handwritten-style note, including fixture provenance.

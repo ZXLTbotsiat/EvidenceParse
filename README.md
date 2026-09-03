@@ -99,9 +99,9 @@ and [`docs/images/README.md`](docs/images/README.md).
 - **Adaptive preprocessing** — compare orientation, deskew, denoised contrast,
   and binarized candidates per page, then keep the OCR result with the strongest
   confidence and text coverage.
-- **Inspectable OCR input** — keep the source document as the default comparison
-  view, with an optional button that recreates the exact transient image selected
-  for recognition.
+- **Inspectable processing state** — keep the source document as the default
+  comparison view, with one button for the exact transient OCR input or the
+  text-layer regions used by a digital PDF.
 - **Batch processing** — upload multiple documents or a ZIP archive and inspect
   progress and results per file.
 - **Five interface languages** — switch the complete review workspace between

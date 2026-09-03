@@ -89,10 +89,13 @@ main { width: min(1720px, 100%); margin: 0 auto; padding: 16px 24px 28px; }
 .ocr-preview-toggle { min-height: 34px; padding: 6px 10px; border: 1px solid #b8c4ed; border-radius: 7px; color: var(--primary); background: var(--primary-soft); font-size: 12px; font-weight: 650; }
 .ocr-preview-toggle.active { border-color: #d4a15f; color: #8a4b13; background: #fff5e8; }
 .ocr-input-stage { box-shadow: 0 0 0 3px rgba(189, 84, 23, .14), 0 8px 26px rgba(30, 46, 75, .12); }
+.text-layer-overlay { position: absolute; z-index: 2; min-width: 2px; min-height: 2px; border: 1px solid rgba(47, 86, 207, .62); border-radius: 2px; background: rgba(47, 86, 207, .08); pointer-events: none; }
 .preprocessing-note { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 9px 16px; border-top: 1px solid #f0d7b8; color: #75420f; background: #fff8ef; }
 .preprocessing-note div { display: flex; align-items: baseline; gap: 8px; }
 .preprocessing-note span, .preprocessing-note small { color: #9a6129; font-size: 11px; }
 .preprocessing-note strong { font-size: 12px; }
+.text-layer-note { border-top-color: #cfdaff; color: #294aa9; background: #f1f5ff; }
+.text-layer-note span, .text-layer-note small { color: #5770b7; }
 
 .preview-empty { display: flex; height: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 40px; color: var(--muted); text-align: center; background: linear-gradient(145deg, #f7f9fc, #edf1f6); }
 .preview-empty-shell { position: relative; display: flex; height: 100%; background: linear-gradient(145deg, #f7f9fc, #edf1f6); }
