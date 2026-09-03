@@ -30,6 +30,7 @@ plus durable duplicate detection and an audited human-review workflow.
 - deterministic revalidation, review decisions, and immutable audit events
 - document listing and review-status filtering
 - bounded multi-file and ZIP batch jobs with persistent item-level status
+- click-to-source OCR positioning for images and locally rendered PDF pages
 - reproducible JSON and Markdown benchmark reports
 - optional API key protection and documented key rotation
 - liveness/readiness probes, defensive headers, and non-root containers
@@ -123,6 +124,11 @@ that bounded member from the locally selected archive so the source and OCR can
 still be compared without server-side document retention. The current executor
 runs inside the API process; a restart-safe external queue belongs to deployment
 hardening rather than this local-first release.
+
+For PDF results, selecting an OCR text block renders the matching page through
+the local API, scrolls the source pane to the original coordinates, and draws a
+highlight box. The self-hosted service performs the rendering; no third-party
+PDF viewer receives the file.
 
 Run tests:
 

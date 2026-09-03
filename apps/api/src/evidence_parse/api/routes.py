@@ -11,6 +11,7 @@ from fastapi import (
     Query,
     UploadFile,
 )
+from fastapi.responses import Response
 from starlette.concurrency import run_in_threadpool
 
 from evidence_parse.api.batch_uploads import (
@@ -29,6 +30,7 @@ from evidence_parse.api.models import (
     ReviewDecisionRequest,
     ReviewEvent,
 )
+from evidence_parse.api.previews import PdfPreviewError, render_pdf_page
 from evidence_parse.api.security import require_api_key
 from evidence_parse.application import (
     BatchApplicationService,
@@ -46,6 +48,29 @@ from evidence_parse.schemas import UnsupportedSchemaError
 from evidence_parse.service import InvalidDocumentError, UnsupportedDocumentError
 
 router = APIRouter(prefix="/api/v1", dependencies=[Depends(require_api_key)])
+
+
+@router.post("/previews/pdf-page", response_class=Response)
+async def preview_pdf_page(
+    file: UploadFile = File(...),
+    page: int = Form(1, ge=1),
+) -> Response:
+    """Render a transient PDF page for an auditable source/OCR comparison."""
+
+    content = await file.read()
+    max_bytes = int(os.getenv("EVIDENCE_PARSE_MAX_UPLOAD_MB", "20")) * 1024 * 1024
+    filename = file.filename or "document.pdf"
+    if not filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=415, detail="PDF preview only supports PDF files.")
+    if not content:
+        raise HTTPException(status_code=400, detail="The uploaded PDF is empty.")
+    if len(content) > max_bytes:
+        raise HTTPException(status_code=413, detail="The uploaded PDF exceeds the size limit.")
+    try:
+        png = await run_in_threadpool(render_pdf_page, content, page)
+        return Response(content=png, media_type="image/png")
+    except PdfPreviewError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.post("/batches", response_model=BatchJobResponse, status_code=202)

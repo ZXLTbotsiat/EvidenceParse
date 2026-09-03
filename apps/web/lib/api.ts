@@ -21,6 +21,20 @@ export async function parseDocument(file: File, schema: string, apiKey: string) 
   }));
 }
 
+export async function renderPdfPage(file: File, page: number, apiKey: string) {
+  const body = new FormData();
+  body.append("file", file);
+  body.append("page", String(page));
+  const response = await fetch(`${API_URL}/api/v1/previews/pdf-page`, {
+    method: "POST", headers: headers(apiKey), body,
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail ?? "PDF 原文预览失败。");
+  }
+  return response.blob();
+}
+
 export async function createBatch(files: File[], schema: string, apiKey: string) {
   const body = new FormData();
   files.forEach((file) => body.append("files", file));

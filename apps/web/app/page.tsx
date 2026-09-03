@@ -231,7 +231,7 @@ export default function Home() {
         {isBatchSelection && (!viewingBatchItem || !file) ? (
           <BatchSourcePreview selectedFiles={selectedFiles} batch={batch} />
         ) : (
-          <DocumentPreview file={file} fileUrl={fileUrl} page={page} pageInfo={result?.pages.find((item) => item.page === page)} selectedBlock={selectedBlock} onFilesSelect={selectFiles} />
+          <DocumentPreview file={file} fileUrl={fileUrl} page={page} pageInfo={result?.pages.find((item) => item.page === page)} selectedBlock={selectedBlock} apiKey={apiKey} onFilesSelect={selectFiles} />
         )}
         <div className="result-panel">
           <div className="panel-title result-title">

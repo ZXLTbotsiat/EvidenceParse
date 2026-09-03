@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useCallback, useEffect, useRef, useState } from "react";
+import { renderPdfPage } from "../lib/api";
 import type { OcrTextBlock, PageContent } from "../lib/types";
 
 type Props = {
@@ -9,23 +10,32 @@ type Props = {
   page: number;
   pageInfo?: PageContent;
   selectedBlock?: OcrTextBlock | null;
+  apiKey: string;
   onFilesSelect: (files: File[]) => void;
 };
 
-export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, onFilesSelect }: Props) {
+export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, apiKey, onFilesSelect }: Props) {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLSpanElement>(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [stageSize, setStageSize] = useState<{ width: number; height: number } | null>(null);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
+  const [pdfError, setPdfError] = useState("");
   const [dragActive, setDragActive] = useState(false);
+  const isPdf = Boolean(file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")));
 
   const fitImage = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !imageSize.width || !imageSize.height) return;
     const availableWidth = Math.max(canvas.clientWidth - 32, 1);
     const availableHeight = Math.max(canvas.clientHeight - 32, 1);
-    const scale = Math.min(availableWidth / imageSize.width, availableHeight / imageSize.height);
+    // PDF pages fit the available width and may scroll vertically. This keeps text
+    // readable while allowing a selected OCR box to be brought into the viewport.
+    const scale = isPdf
+      ? Math.min(availableWidth / imageSize.width, 2)
+      : Math.min(availableWidth / imageSize.width, availableHeight / imageSize.height);
     setStageSize({ width: imageSize.width * scale, height: imageSize.height * scale });
-  }, [imageSize]);
+  }, [imageSize, isPdf]);
 
   useEffect(() => {
     fitImage();
@@ -40,6 +50,44 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
     setImageSize({ width: 0, height: 0 });
     setStageSize(null);
   }, [fileUrl]);
+
+  useEffect(() => {
+    if (!isPdf || !file) {
+      setPdfPreviewUrl("");
+      setPdfError("");
+      return;
+    }
+
+    let cancelled = false;
+    let previewUrl = "";
+
+    async function loadPdfPage() {
+      try {
+        setPdfPreviewUrl("");
+        setPdfError("");
+        const preview = await renderPdfPage(file!, page, apiKey);
+        if (cancelled) return;
+        previewUrl = URL.createObjectURL(preview);
+        setPdfPreviewUrl(previewUrl);
+      } catch {
+        if (!cancelled) setPdfError("PDF 原文加载失败，请重新选择文件后再试。");
+      }
+    }
+
+    void loadPdfPage();
+    return () => {
+      cancelled = true;
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [apiKey, file, isPdf, page]);
+
+  useEffect(() => {
+    if (!selectedBlock || !stageSize) return;
+    const frame = requestAnimationFrame(() => {
+      overlayRef.current?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [page, selectedBlock, stageSize]);
 
   function acceptInput(event: ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(event.currentTarget.files ?? []);
@@ -89,8 +137,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
     return <div className="preview-empty"><strong>正在准备原文预览</strong></div>;
   }
 
-  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-  const canOverlay = !isPdf && pageInfo && selectedBlock?.bbox;
+  const canOverlay = pageInfo && selectedBlock?.bbox;
   const overlay = canOverlay ? {
     left: `${(selectedBlock.bbox.x0 / pageInfo.width) * 100}%`,
     top: `${(selectedBlock.bbox.y0 / pageInfo.height) * 100}%`,
@@ -106,10 +153,26 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
       </div>
       <div className="preview-canvas" ref={canvasRef}>
         {isPdf ? (
-          <iframe title="上传文件原文" src={`${fileUrl}#page=${page}&view=FitH`} />
+          pdfError ? <div className="preview-load-state">{pdfError}</div> : (
+            pdfPreviewUrl ? (
+              <div className="document-stage image-stage" style={stageSize ?? undefined}>
+                {/* The local API raster keeps scanned and digital PDFs in one auditable coordinate space. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={pdfPreviewUrl}
+                  alt={`PDF 第 ${page} 页原文`}
+                  onLoad={(event) => setImageSize({
+                    width: event.currentTarget.naturalWidth,
+                    height: event.currentTarget.naturalHeight,
+                  })}
+                />
+                {overlay && <span ref={overlayRef} className="evidence-overlay" style={overlay} />}
+              </div>
+            ) : <span className="pdf-loading-inline">正在渲染第 {page} 页…</span>
+          )
         ) : (
           <div
-            className="image-stage"
+            className="document-stage image-stage"
             style={stageSize ?? undefined}
           >
             {/* The image and overlay share one coordinate system, keeping OCR boxes auditable. */}
@@ -122,7 +185,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
                 height: event.currentTarget.naturalHeight,
               })}
             />
-            {overlay && <span className="evidence-overlay" style={overlay} />}
+            {overlay && <span ref={overlayRef} className="evidence-overlay" style={overlay} />}
           </div>
         )}
       </div>

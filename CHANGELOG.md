@@ -8,6 +8,7 @@ All notable changes to EvidenceParse are documented here.
 
 - Added a reproducible, checksum-pinned downloader and source guide for eight public OCR evaluation files.
 - Added safe ZIP expansion, multi-file browser selection, batch progress, and item-level source/result comparison.
+- Added PDF click-to-source positioning with local page rendering, centered scrolling, and coordinate highlighting.
 
 ### Changed
 

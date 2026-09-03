@@ -38,6 +38,29 @@ def test_parse_digital_pdf(client: TestClient) -> None:
     assert len(payload["content_fingerprint"]) == 64
 
 
+def test_pdf_page_preview_returns_png(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/previews/pdf-page",
+        data={"page": "1"},
+        files={"file": ("invoice.pdf", _invoice_pdf(), "application/pdf")},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/png"
+    assert response.content.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_pdf_page_preview_rejects_out_of_range_page(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/previews/pdf-page",
+        data={"page": "2"},
+        files={"file": ("invoice.pdf", _invoice_pdf(), "application/pdf")},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "PDF page must be between 1 and 1."
+
+
 def test_generic_ocr_returns_text_without_professional_fields(client: TestClient) -> None:
     response = client.post(
         "/api/v1/documents/parse",
