@@ -1,4 +1,4 @@
-# EvidenceParse synthetic invoice regression corpus benchmark
+# OCRWorkbench synthetic invoice regression corpus benchmark
 
 Generated: `2026-09-03T08:10:18.384525+00:00`
 

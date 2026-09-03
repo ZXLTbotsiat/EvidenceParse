@@ -200,6 +200,6 @@
   ],
   "contains_real_personal_data": false,
   "license": "MIT",
-  "name": "EvidenceParse synthetic invoice regression corpus",
+  "name": "OCRWorkbench synthetic invoice regression corpus",
   "version": 2
 }

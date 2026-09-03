@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "evidence-parse-api"
 version = "0.7.0"
-description = "Evidence-first document extraction API"
+description = "Self-hosted OCR and structured document extraction API"
 requires-python = ">=3.9"
 dependencies = [
   "alembic>=1.14,<2.0",

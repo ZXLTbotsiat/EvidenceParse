@@ -3,8 +3,8 @@ import { I18nProvider } from "../lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EvidenceParse",
-  description: "Traceable general and professional OCR workspace",
+  title: "OCRWorkbench",
+  description: "Self-hosted general and professional OCR workspace",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

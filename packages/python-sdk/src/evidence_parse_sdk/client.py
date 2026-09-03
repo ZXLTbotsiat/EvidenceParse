@@ -11,7 +11,7 @@ BatchFile = Tuple[str, bytes, str]
 
 class EvidenceParseError(RuntimeError):
     def __init__(self, status_code: int, detail: str) -> None:
-        super().__init__(f"EvidenceParse returned HTTP {status_code}: {detail}")
+        super().__init__(f"OCRWorkbench returned HTTP {status_code}: {detail}")
         self.status_code = status_code
         self.detail = detail
 

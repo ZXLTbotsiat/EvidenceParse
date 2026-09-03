@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to EvidenceParse are documented here.
+All notable changes to OCRWorkbench are documented here.
 
 ## [Unreleased]
 

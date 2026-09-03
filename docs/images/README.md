@@ -1,7 +1,7 @@
 # Documentation image provenance
 
 The product screenshots in this directory were captured from a local
-EvidenceParse instance. They contain no customer data or private documents.
+OCRWorkbench instance. They contain no customer data or private documents.
 All interface chrome shown in the README screenshots uses the English locale.
 
 `source-traceability.jpg`, `batch-processing.jpg`, and `mobile-review.jpg` use
@@ -23,7 +23,7 @@ resources:
 | `challenging-illustrated.jpg` | `c03-29.pdf` | Public domain |
 
 Those source excerpts retain their upstream terms and are not relicensed under
-the EvidenceParse MIT license. See the full fixture provenance in
+the OCRWorkbench MIT license. See the full fixture provenance in
 [`datasets/external/ocr-evaluation/README.md`](../../datasets/external/ocr-evaluation/README.md)
 and OCRmyPDF's upstream
 [`REUSE.toml`](https://github.com/ocrmypdf/OCRmyPDF/blob/main/REUSE.toml).

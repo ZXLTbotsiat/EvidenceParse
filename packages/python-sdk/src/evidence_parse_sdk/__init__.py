@@ -1,4 +1,4 @@
-"""Public Python client for EvidenceParse."""
+"""Public Python client for OCRWorkbench."""
 
 from evidence_parse_sdk.client import EvidenceParseClient, EvidenceParseError
 

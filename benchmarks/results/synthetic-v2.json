@@ -1,5 +1,5 @@
 {
-  "corpus_name": "EvidenceParse synthetic invoice regression corpus",
+  "corpus_name": "OCRWorkbench synthetic invoice regression corpus",
   "corpus_version": 2,
   "generated_at": "2026-09-03T08:10:18.384525+00:00",
   "scope": "Synthetic regression accuracy only; this report is not evidence of real-world document accuracy.",

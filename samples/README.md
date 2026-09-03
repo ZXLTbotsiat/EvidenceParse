@@ -1,7 +1,7 @@
 # Samples
 
 These small, redistributable files are ready for a first local trial of
-EvidenceParse. They contain no customer data.
+OCRWorkbench. They contain no customer data.
 
 - `demo-invoice.pdf` exercises the invoice workflow.
 - `handwritten-style-note.png` exercises generic OCR, slight rotation, ruled

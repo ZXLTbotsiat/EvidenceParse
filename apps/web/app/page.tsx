@@ -215,8 +215,8 @@ export default function Home() {
   return (
     <main>
       <header className="app-header">
-        <div className="brand-mark">EP</div>
-        <div><h1>EvidenceParse</h1><p>{t("app.tagline")}</p></div>
+        <div className="brand-mark">OCR</div>
+        <div><h1>OCRWorkbench</h1><p>{t("app.tagline")}</p></div>
         <div className="header-actions">
           <label className="language-picker">
             <span>{t("language.label")}</span>

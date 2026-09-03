@@ -1,6 +1,6 @@
 # Benchmarks
 
-EvidenceParse keeps repeatable benchmark outputs separate from the source
+OCRWorkbench keeps repeatable benchmark outputs separate from the source
 dataset and ordinary unit-test results.
 
 Run the current synthetic corpus from the repository root:

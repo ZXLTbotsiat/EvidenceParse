@@ -1,8 +1,8 @@
-# EvidenceParse development guide
+# OCRWorkbench development guide
 
 ## Product goal
 
-Build an evidence-first document extraction system. Every extracted value should be traceable to a source page and region, validated where possible, and marked for human review when confidence is insufficient.
+Build a self-hosted OCR and document extraction workbench. Every extracted value should remain traceable to a source page and region, validated where possible, and marked for human review when confidence is insufficient.
 
 ## Engineering rules
 
@@ -21,4 +21,3 @@ Each batch should remain runnable and include:
 2. tests;
 3. README or changelog updates;
 4. a scoped Git commit.
-

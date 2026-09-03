@@ -1,6 +1,6 @@
-# EvidenceParse Python SDK
+# OCRWorkbench Python SDK
 
-A small synchronous client for self-hosted EvidenceParse deployments.
+A small synchronous client for self-hosted OCRWorkbench deployments.
 
 ```python
 from evidence_parse_sdk import EvidenceParseClient

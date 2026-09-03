@@ -1,36 +1,36 @@
 <div align="center">
 
-# EvidenceParse
+# OCRWorkbench
 
-**Evidence-first OCR and document extraction for PDFs and images.**
+**Self-hosted OCR, structured document extraction, and human review for PDFs and images.**
 
 Turn documents into structured data without losing the connection to the
 original page, text, and coordinates.
 
-[![CI](https://github.com/ZXLTbotsiat/EvidenceParse/actions/workflows/ci.yml/badge.svg)](https://github.com/ZXLTbotsiat/EvidenceParse/actions/workflows/ci.yml)
+[![CI](https://github.com/ZXLTbotsiat/OCRWorkbench/actions/workflows/ci.yml/badge.svg)](https://github.com/ZXLTbotsiat/OCRWorkbench/actions/workflows/ci.yml)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](apps/api/pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 </div>
 
 <p align="center">
-  <img src="docs/images/challenging-rotated.jpg" alt="EvidenceParse recognizing a rotated and skewed two-column scan with the selected heading highlighted in the source" width="100%">
+  <img src="docs/images/challenging-rotated.jpg" alt="OCRWorkbench recognizing a rotated and skewed two-column scan with the selected heading highlighted in the source" width="100%">
 </p>
 
 <p align="center"><sub>Rotated scan, skewed page, dense two-column reading order — with every result still traceable to its source.</sub></p>
 
-EvidenceParse is a self-hosted document understanding system built for
-traceability. It combines local OCR, structured extraction, deterministic
+OCRWorkbench is a self-hosted OCR and document extraction system built for
+reviewable results. It combines local OCR, structured extraction, deterministic
 validation, and human review in one workflow. Every extracted value can carry
 its source page and bounding box, so reviewers can verify results against the
 original document instead of trusting an opaque JSON response.
 
-Documents are processed locally. EvidenceParse does not send uploaded files to
+Documents are processed locally. OCRWorkbench does not send uploaded files to
 an external OCR or AI service.
 
 ## Challenging documents
 
-The differentiator is not merely producing text. EvidenceParse keeps difficult
+The differentiator is not merely producing text. OCRWorkbench keeps difficult
 OCR output reviewable: low-confidence regions stay visible, and every detected
 block can be checked against the exact source location.
 
@@ -40,8 +40,8 @@ block can be checked against the exact source location.
     <td width="50%"><strong>Old illustrated scan</strong></td>
   </tr>
   <tr>
-    <td><img src="docs/images/challenging-typewriter.jpg" alt="EvidenceParse recognizing noisy typewriter text with a diacritic and confidence scores"></td>
-    <td><img src="docs/images/challenging-illustrated.jpg" alt="EvidenceParse recognizing an illustrated old-book scan and locating its caption"></td>
+    <td><img src="docs/images/challenging-typewriter.jpg" alt="OCRWorkbench recognizing noisy typewriter text with a diacritic and confidence scores"></td>
+    <td><img src="docs/images/challenging-illustrated.jpg" alt="OCRWorkbench recognizing an illustrated old-book scan and locating its caption"></td>
   </tr>
   <tr>
     <td>Irregular glyphs, paper noise, and accented text are shown with per-region confidence instead of being silently normalized.</td>
@@ -52,7 +52,7 @@ block can be checked against the exact source location.
 <p><strong>Synthetic handwritten-style field note</strong></p>
 
 <p align="center">
-  <img src="docs/images/challenging-handwritten-style.jpg" alt="EvidenceParse recognizing a slightly rotated synthetic handwritten-style field note and locating the selected maintenance instruction" width="100%">
+  <img src="docs/images/challenging-handwritten-style.jpg" alt="OCRWorkbench recognizing a slightly rotated synthetic handwritten-style field note and locating the selected maintenance instruction" width="100%">
 </p>
 
 The deliberately rotated note is included as a reproducible, synthetic stress
@@ -68,7 +68,7 @@ and [`docs/images/README.md`](docs/images/README.md).
 ## Product tour
 
 <p align="center">
-  <img src="docs/images/source-traceability.jpg" alt="EvidenceParse source document and OCR result shown side by side with the selected total highlighted in both panes" width="100%">
+  <img src="docs/images/source-traceability.jpg" alt="OCRWorkbench source document and OCR result shown side by side with the selected total highlighted in both panes" width="100%">
 </p>
 
 <p align="center"><sub>Click any OCR result to return to the exact source page and region.</sub></p>
@@ -79,8 +79,8 @@ and [`docs/images/README.md`](docs/images/README.md).
     <td width="30%"><strong>Responsive review</strong></td>
   </tr>
   <tr>
-    <td><img src="docs/images/batch-processing.jpg" alt="Three documents completed in the EvidenceParse batch processing workbench"></td>
-    <td><img src="docs/images/mobile-review.jpg" alt="EvidenceParse OCR result review on a narrow mobile viewport"></td>
+    <td><img src="docs/images/batch-processing.jpg" alt="Three documents completed in the OCRWorkbench batch processing workbench"></td>
+    <td><img src="docs/images/mobile-review.jpg" alt="OCRWorkbench OCR result review on a narrow mobile viewport"></td>
   </tr>
   <tr>
     <td>Process multiple PDFs and images together, then open each completed result without leaving the batch.</td>
@@ -129,8 +129,8 @@ and [`docs/images/README.md`](docs/images/README.md).
 The easiest way to run the complete application is Docker Compose.
 
 ```bash
-git clone https://github.com/ZXLTbotsiat/EvidenceParse.git
-cd EvidenceParse
+git clone https://github.com/ZXLTbotsiat/OCRWorkbench.git
+cd OCRWorkbench
 docker compose up --build
 ```
 
@@ -400,4 +400,4 @@ must never be committed.
 
 ## License
 
-EvidenceParse is available under the [MIT License](LICENSE).
+OCRWorkbench is available under the [MIT License](LICENSE).

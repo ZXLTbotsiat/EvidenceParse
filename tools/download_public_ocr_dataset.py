@@ -89,7 +89,7 @@ def _download(sample: PublicSample) -> None:
     temporary = destination.with_suffix(destination.suffix + ".part")
     request = urllib.request.Request(
         sample.url,
-        headers={"User-Agent": "EvidenceParse public dataset downloader"},
+        headers={"User-Agent": "OCRWorkbench public dataset downloader"},
     )
     try:
         with urllib.request.urlopen(request, timeout=60) as response:

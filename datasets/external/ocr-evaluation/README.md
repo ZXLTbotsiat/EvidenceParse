@@ -1,6 +1,6 @@
 # OCR 公开测试包
 
-这组文件用于手工对比 EvidenceParse 的“通用 OCR”和“专业 OCR”。它们不进入
+这组文件用于手工对比 OCRWorkbench 的“通用 OCR”和“专业 OCR”。它们不进入
 `datasets/manifest.json` 的自动回归集，也不适合用来计算一个综合准确率。
 二进制文件只保存在本机，不纳入 Git；在项目根目录运行下面的命令可下载或校验它们：
 
@@ -27,7 +27,7 @@ python tools/download_public_ocr_dataset.py
 `01`–`07` 来自 [OCRmyPDF 测试资源](https://github.com/ocrmypdf/OCRmyPDF/tree/main/tests/resources)，
 文件未做内容修改，仅为便于测试而重命名。详细归属以上游
 [`REUSE.toml`](https://github.com/ocrmypdf/OCRmyPDF/blob/main/REUSE.toml) 为准。
-各文件依对应许可使用，不受 EvidenceParse 仓库 MIT 许可覆盖。
+各文件依对应许可使用，不受 OCRWorkbench 仓库 MIT 许可覆盖。
 
 | 文件 | 上游文件 | 许可/属性 |
 | --- | --- | --- |

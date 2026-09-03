@@ -1,1 +1,1 @@
-"""HTTP transport for EvidenceParse."""
+"""HTTP transport for OCRWorkbench."""

@@ -1,6 +1,6 @@
 # Self-hosting and deployment
 
-EvidenceParse is local-first and can run with Docker Compose. The default
+OCRWorkbench is local-first and can run with Docker Compose. The default
 configuration is intended for a trusted development machine; review these
 boundaries before exposing it to a network.
 

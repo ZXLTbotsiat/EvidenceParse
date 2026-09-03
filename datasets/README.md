@@ -1,6 +1,6 @@
 # Test dataset
 
-This directory contains the versioned regression corpus for EvidenceParse.
+This directory contains the versioned regression corpus for OCRWorkbench.
 Documents referenced by `manifest.json` are synthetic, contain no customer or
 personal data, and are covered by the repository's MIT license.
 

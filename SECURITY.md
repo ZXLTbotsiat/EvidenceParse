@@ -13,7 +13,7 @@ or personal data.
 
 ## Data boundary
 
-The repository contains only synthetic fixtures. EvidenceParse performs OCR
+The repository contains only synthetic fixtures. OCRWorkbench performs OCR
 locally and does not transmit uploaded documents to an external AI service.
 Self-hosters are responsible for transport security, database access, backups,
 retention, deletion, and any regulatory obligations for their own documents.

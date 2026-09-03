@@ -1,4 +1,4 @@
-"""Generate the public, synthetic regression corpus for EvidenceParse.
+"""Generate the public, synthetic regression corpus for OCRWorkbench.
 
 The generated documents are committed so contributors can run the test suite
 without first installing dataset tooling. Re-running this script replaces only
@@ -494,7 +494,7 @@ def main() -> None:
     _write_json(
         DATASET_ROOT / "manifest.json",
         {
-            "name": "EvidenceParse synthetic invoice regression corpus",
+            "name": "OCRWorkbench synthetic invoice regression corpus",
             "version": 2,
             "license": "MIT",
             "contains_real_personal_data": False,

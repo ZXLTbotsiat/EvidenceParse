@@ -38,9 +38,9 @@ def create_app(
         database.dispose()
 
     application = FastAPI(
-        title="EvidenceParse API",
+        title="OCRWorkbench API",
         version=__version__,
-        description="Evidence-first document extraction with explicit human-review boundaries.",
+        description="Self-hosted OCR and structured document extraction with explicit human-review boundaries.",
         lifespan=lifespan,
     )
     application.state.database = database
