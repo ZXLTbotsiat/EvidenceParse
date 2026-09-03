@@ -42,6 +42,7 @@ export default function Home() {
   const [batch, setBatch] = useState<BatchJob | null>(null);
   const [viewingBatchItem, setViewingBatchItem] = useState(false);
   const [openingItemId, setOpeningItemId] = useState("");
+  const [mobilePane, setMobilePane] = useState<"source" | "results">("source");
 
   useEffect(() => {
     if (!file) { setFileUrl(""); return; }
@@ -113,6 +114,7 @@ export default function Home() {
     setFile(previewFile);
     setBatch(null); setViewingBatchItem(false); setOpeningItemId("");
     setResult(null); setSelectedBlock(null); setPage(1); setError("");
+    setMobilePane("source");
   }
 
   function chooseFile(event: ChangeEvent<HTMLInputElement>) {
@@ -128,11 +130,13 @@ export default function Home() {
       if (isBatchSelection) {
         const payload = await createBatch(selectedFiles, mode, apiKey);
         setBatch(payload); setViewingBatchItem(false); setResult(null);
+        setMobilePane("results");
       } else if (file) {
         const payload = await parseDocument(file, mode, apiKey);
         setResult(payload);
         setResultTab(mode === "invoice" ? "professional" : "ocr");
         setPage(1); setSelectedBlock(null); setEvents([]);
+        setMobilePane("results");
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "识别失败，请稍后重试。");
@@ -151,6 +155,7 @@ export default function Home() {
       setResultTab(payload.schema_name === "invoice" ? "professional" : "ocr");
       setFile(previewFile);
       setPage(1); setSelectedBlock(null); setEvents([]);
+      setMobilePane("results");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "无法打开批次结果。");
     } finally { setOpeningItemId(""); }
@@ -162,6 +167,7 @@ export default function Home() {
     setPage(evidence.page);
     setSelectedBlock(matching ?? { ...evidence, bbox: evidence.bbox, confidence: 1 });
     setResultTab("ocr");
+    setMobilePane("source");
   }
 
   function chooseCorrection(path: string) {
@@ -225,9 +231,14 @@ export default function Home() {
         <button className="primary-action" disabled={!selectedFiles.length || loading || batchRunning} onClick={runOcr}>{loading ? "正在创建…" : batchRunning ? "批量识别中…" : isBatchSelection ? "批量识别" : "开始识别"}</button>
       </section>
 
-      {error && <p className="error-banner">{error}</p>}
+      {error && <p className="error-banner" role="alert">{error}</p>}
 
-      <section className="comparison-workspace">
+      <nav className="mobile-pane-switcher" aria-label="对照视图">
+        <button className={mobilePane === "source" ? "active" : ""} onClick={() => setMobilePane("source")}>原文</button>
+        <button className={mobilePane === "results" ? "active" : ""} onClick={() => setMobilePane("results")}>识别结果{result && <span aria-hidden="true" />}</button>
+      </nav>
+
+      <section className={`comparison-workspace mobile-pane-${mobilePane}`}>
         {isBatchSelection && (!viewingBatchItem || !file) ? (
           <BatchSourcePreview selectedFiles={selectedFiles} batch={batch} />
         ) : (
@@ -237,7 +248,7 @@ export default function Home() {
           <div className="panel-title result-title">
             <div><span className="kicker">识别结果</span><strong>{isBatchSelection && !viewingBatchItem ? "批量任务" : result ? MODE_COPY[result.schema_name].title : "等待识别"}</strong></div>
             <div className="result-heading-actions">
-              {isBatchSelection && viewingBatchItem && <button className="batch-back" onClick={() => setViewingBatchItem(false)}>返回批次</button>}
+              {isBatchSelection && viewingBatchItem && <button className="batch-back" onClick={() => { setViewingBatchItem(false); setMobilePane("results"); }}>返回批次</button>}
               {result && (!isBatchSelection || viewingBatchItem) && <span className="source-badge">{result.source_kind.replaceAll("_", " ")}</span>}
             </div>
           </div>
@@ -254,7 +265,7 @@ export default function Home() {
               {resultTab === "ocr" ? (
                 <OcrResults pages={result.pages} blocks={result.text_blocks} page={page} selectedBlock={selectedBlock}
                   onPageChange={(nextPage) => { setPage(nextPage); setSelectedBlock(null); }}
-                  onBlockSelect={(block) => { setPage(block.page); setSelectedBlock(block); }} />
+                  onBlockSelect={(block) => { setPage(block.page); setSelectedBlock(block); setMobilePane("source"); }} />
               ) : <StructuredResults result={result} onEvidenceSelect={selectEvidence} />}
             </>
           )}

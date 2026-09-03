@@ -12,6 +12,9 @@ All notable changes to EvidenceParse are documented here.
 
 ### Changed
 
+- Rebalanced the review workspace for larger text, clearer hierarchy, and easier-to-hit controls.
+- Kept the side-by-side comparison available at tablet widths and added a focused source/result switcher on narrow screens.
+- On narrow screens, selecting OCR evidence now opens the source pane directly at the highlighted region.
 - The empty source-preview panel now accepts drag-and-drop, click, and keyboard file selection.
 - Compacted the OCR toolbar and made the comparison workspace fit the available viewport.
 - Images now default to a whole-document fit while preserving accurate evidence overlays.
