@@ -7,6 +7,7 @@ from evidence_parse.models import (
     DocumentParseResult,
     ExtractedValue,
     ReviewStatus,
+    SourceKind,
     ValueSource,
 )
 from evidence_parse.persistence.repository import (
@@ -55,7 +56,12 @@ class DocumentApplicationService:
         schema = self.schema_registry.get(schema_name)
         existing = self.repository.find_by_fingerprint(fingerprint, schema.name)
         if existing is not None:
-            if not existing.pages and not existing.text_blocks:
+            needs_source_content = not existing.pages and not existing.text_blocks
+            needs_preprocessing = (
+                existing.source_kind is not SourceKind.DIGITAL_PDF
+                and not existing.preprocessing
+            )
+            if needs_source_content or needs_preprocessing:
                 enriched = self.parser.parse(filename, content_type, content, schema.name)
                 enriched.document_id = existing.document_id
                 self.repository.enrich_source_content(enriched)

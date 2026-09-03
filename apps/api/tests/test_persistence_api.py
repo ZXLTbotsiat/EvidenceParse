@@ -1,8 +1,10 @@
 import json
 import uuid
+from io import BytesIO
 
 import fitz
 from fastapi.testclient import TestClient
+from PIL import Image, ImageDraw
 from sqlalchemy import text
 
 
@@ -28,6 +30,13 @@ def _upload(client: TestClient, content: bytes, filename: str = "invoice.pdf"):
     return client.post(
         "/api/v1/documents/parse",
         files={"file": (filename, content, "application/pdf")},
+    )
+
+
+def _image_upload(client: TestClient, content: bytes, filename: str = "invoice.png"):
+    return client.post(
+        "/api/v1/documents/parse",
+        files={"file": (filename, content, "image/png")},
     )
 
 
@@ -72,6 +81,36 @@ def test_duplicate_upload_backfills_source_content_for_legacy_record(client: Tes
 
     assert duplicate["pages"]
     assert duplicate["text_blocks"]
+
+
+def test_duplicate_scan_backfills_preprocessing_without_replacing_results(
+    client: TestClient,
+) -> None:
+    image = Image.new("RGB", (640, 420), "white")
+    ImageDraw.Draw(image).text(
+        (50, 80), f"LEGACY SCAN {uuid.uuid4().hex[:8]}", fill="black"
+    )
+    output = BytesIO()
+    image.save(output, format="PNG")
+    content = output.getvalue()
+    first = _image_upload(client, content).json()
+    database = client.app.state.database
+    with database.engine.begin() as connection:
+        row = connection.execute(
+            text("SELECT result_json FROM documents WHERE id = :id"),
+            {"id": first["document_id"]},
+        ).scalar_one()
+        payload = json.loads(row) if isinstance(row, str) else row
+        payload.pop("preprocessing", None)
+        connection.execute(
+            text("UPDATE documents SET result_json = :payload WHERE id = :id"),
+            {"payload": json.dumps(payload), "id": first["document_id"]},
+        )
+
+    duplicate = _image_upload(client, content, "legacy-scan-copy.png").json()
+
+    assert duplicate["preprocessing"]
+    assert duplicate["document_id"] == first["document_id"]
 
 
 def test_human_correction_revalidates_and_creates_an_audit_event(

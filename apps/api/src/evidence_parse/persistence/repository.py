@@ -109,18 +109,23 @@ class DocumentRepository:
             return self._to_result(session, row, is_duplicate=True)
 
     def enrich_source_content(self, result: DocumentParseResult) -> None:
-        """Backfill source pages for records created before raw OCR was persisted."""
+        """Backfill additive OCR evidence without replacing reviewed extraction."""
 
         with Session(self.engine) as session, session.begin():
             row = session.get(DocumentRow, result.document_id)
             if row is None:
                 raise DocumentNotFoundError(result.document_id)
             stored = DocumentParseResult.model_validate(row.result_json)
-            if stored.pages or stored.text_blocks:
-                return
-            stored.pages = result.pages
-            stored.text_blocks = result.text_blocks
-            row.result_json = stored.model_dump(mode="json")
+            changed = False
+            if not stored.pages and not stored.text_blocks:
+                stored.pages = result.pages
+                stored.text_blocks = result.text_blocks
+                changed = True
+            if not stored.preprocessing and result.preprocessing:
+                stored.preprocessing = result.preprocessing
+                changed = True
+            if changed:
+                row.result_json = stored.model_dump(mode="json")
 
     def list(
         self,
