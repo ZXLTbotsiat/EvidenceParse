@@ -13,6 +13,12 @@ original page, text, and coordinates.
 
 </div>
 
+<p align="center">
+  <img src="docs/images/source-traceability.jpg" alt="EvidenceParse source document and OCR result shown side by side with the selected total highlighted in both panes" width="100%">
+</p>
+
+<p align="center"><sub>Click any OCR result to return to the exact source page and region.</sub></p>
+
 EvidenceParse is a self-hosted document understanding system built for
 traceability. It combines local OCR, structured extraction, deterministic
 validation, and human review in one workflow. Every extracted value can carry
@@ -21,6 +27,23 @@ original document instead of trusting an opaque JSON response.
 
 Documents are processed locally. EvidenceParse does not send uploaded files to
 an external OCR or AI service.
+
+## Product tour
+
+<table>
+  <tr>
+    <td width="70%"><strong>Batch processing</strong></td>
+    <td width="30%"><strong>Responsive review</strong></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/batch-processing.jpg" alt="Three documents completed in the EvidenceParse batch processing workbench"></td>
+    <td><img src="docs/images/mobile-review.jpg" alt="EvidenceParse OCR result review on a narrow mobile viewport"></td>
+  </tr>
+  <tr>
+    <td>Process multiple PDFs and images together, then open each completed result without leaving the batch.</td>
+    <td>Switch between source and OCR results on narrow screens; selecting evidence returns directly to the highlighted source.</td>
+  </tr>
+</table>
 
 ## Features
 
