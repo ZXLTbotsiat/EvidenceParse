@@ -2,6 +2,18 @@
 
 All notable changes to EvidenceParse are documented here.
 
+## [Unreleased]
+
+### Changed
+
+- Compacted the OCR toolbar and made the comparison workspace fit the available viewport.
+- Images now default to a whole-document fit while preserving accurate evidence overlays.
+- OCR result lists use the remaining panel height instead of fixed nested scroll regions.
+
+### Fixed
+
+- Avoided rendering an empty preview URL while the browser prepares a selected file.
+
 ## [0.7.0] - 2026-09-03
 
 ### Added

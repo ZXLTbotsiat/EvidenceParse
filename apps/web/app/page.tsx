@@ -112,7 +112,10 @@ export default function Home() {
       <header className="app-header">
         <div className="brand-mark">EP</div>
         <div><h1>EvidenceParse</h1><p>让每一项识别结果，都能回到原文核对。</p></div>
-        <span className="local-badge">本地 OCR · 文件不外传</span>
+        <div className="header-actions">
+          <details className="api-key"><summary>API Key</summary><input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="off" placeholder="本地模式可不填" /></details>
+          <span className="local-badge">本地 OCR · 文件不外传</span>
+        </div>
       </header>
 
       <section className="control-bar">
@@ -129,7 +132,6 @@ export default function Home() {
           ))}
         </div>
         <button className="primary-action" disabled={!file || loading} onClick={runOcr}>{loading ? "正在识别…" : "开始识别"}</button>
-        <details className="api-key"><summary>API Key</summary><input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="off" placeholder="本地模式可不填" /></details>
       </section>
 
       {error && <p className="error-banner">{error}</p>}
