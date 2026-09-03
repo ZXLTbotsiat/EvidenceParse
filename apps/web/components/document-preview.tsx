@@ -2,6 +2,7 @@
 
 import { ChangeEvent, DragEvent, useCallback, useEffect, useRef, useState } from "react";
 import { renderPdfPage } from "../lib/api";
+import { useI18n } from "../lib/i18n";
 import type { OcrTextBlock, PageContent } from "../lib/types";
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, apiKey, onFilesSelect }: Props) {
+  const { t } = useI18n();
   const canvasRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLSpanElement>(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
@@ -70,7 +72,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
         previewUrl = URL.createObjectURL(preview);
         setPdfPreviewUrl(previewUrl);
       } catch {
-        if (!cancelled) setPdfError("PDF 原文加载失败，请重新选择文件后再试。");
+        if (!cancelled) setPdfError(t("preview.pdfError"));
       }
     }
 
@@ -79,7 +81,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
       cancelled = true;
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-  }, [apiKey, file, isPdf, page]);
+  }, [apiKey, file, isPdf, page, t]);
 
   useEffect(() => {
     if (!selectedBlock || !stageSize) return;
@@ -118,23 +120,23 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
           accept=".pdf,.png,.jpg,.jpeg,.zip"
           multiple
           onChange={acceptInput}
-          aria-label="拖拽或点击上传文件"
+          aria-label={t("preview.uploadLabel")}
         />
         <div
           className={`preview-empty drop-target ${dragActive ? "drag-active" : ""}`}
           aria-hidden="true"
         >
           <span className="drop-icon">↑</span>
-          <strong>{dragActive ? "松开即可预览" : "拖拽文件到这里"}</strong>
-          <p>也可以点击选择多个文档或 ZIP 压缩包</p>
-          <small>文件先在本地预览，开始识别后才会发送到本机 OCR 服务。</small>
+          <strong>{dragActive ? t("preview.release") : t("preview.drop")}</strong>
+          <p>{t("preview.click")}</p>
+          <small>{t("preview.private")}</small>
         </div>
       </div>
     );
   }
 
   if (!fileUrl) {
-    return <div className="preview-empty"><strong>正在准备原文预览</strong></div>;
+    return <div className="preview-empty"><strong>{t("preview.preparing")}</strong></div>;
   }
 
   const canOverlay = pageInfo && selectedBlock?.bbox;
@@ -148,8 +150,8 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
   return (
     <div className="document-preview">
       <div className="panel-title">
-        <div><span className="kicker">原始文件</span><strong title={file.name}>{file.name}</strong></div>
-        <span className="page-badge">第 {page} 页</span>
+        <div><span className="kicker">{t("preview.original")}</span><strong title={file.name}>{file.name}</strong></div>
+        <span className="page-badge">{t("preview.page", { page })}</span>
       </div>
       <div className="preview-canvas" ref={canvasRef}>
         {isPdf ? (
@@ -160,7 +162,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={pdfPreviewUrl}
-                  alt={`PDF 第 ${page} 页原文`}
+                  alt={t("preview.pdfAlt", { page })}
                   onLoad={(event) => setImageSize({
                     width: event.currentTarget.naturalWidth,
                     height: event.currentTarget.naturalHeight,
@@ -168,7 +170,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
                 />
                 {overlay && <span ref={overlayRef} className="evidence-overlay" style={overlay} />}
               </div>
-            ) : <span className="pdf-loading-inline">正在渲染第 {page} 页…</span>
+            ) : <span className="pdf-loading-inline">{t("preview.rendering", { page })}</span>
           )
         ) : (
           <div
@@ -179,7 +181,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={fileUrl}
-              alt={`上传文件 ${file.name}`}
+              alt={t("preview.imageAlt", { name: file.name })}
               onLoad={(event) => setImageSize({
                 width: event.currentTarget.naturalWidth,
                 height: event.currentTarget.naturalHeight,
@@ -191,8 +193,8 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
       </div>
       {selectedBlock && (
         <div className="selected-evidence">
-          <span>当前对照</span><strong>{selectedBlock.text}</strong>
-          <small>位置 {Math.round(selectedBlock.bbox.x0)}, {Math.round(selectedBlock.bbox.y0)}</small>
+          <span>{t("preview.current")}</span><strong>{selectedBlock.text}</strong>
+          <small>{t("preview.position", { x: Math.round(selectedBlock.bbox.x0), y: Math.round(selectedBlock.bbox.y0) })}</small>
         </div>
       )}
     </div>

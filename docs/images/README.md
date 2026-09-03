@@ -2,6 +2,7 @@
 
 The product screenshots in this directory were captured from a local
 EvidenceParse instance. They contain no customer data or private documents.
+All interface chrome shown in the README screenshots uses the English locale.
 
 `source-traceability.jpg`, `batch-processing.jpg`, and `mobile-review.jpg` use
 the repository's MIT-licensed synthetic fixtures.

@@ -1,4 +1,5 @@
 import type { OcrTextBlock, PageContent } from "../lib/types";
+import { useI18n } from "../lib/i18n";
 
 type Props = {
   pages: PageContent[];
@@ -10,19 +11,20 @@ type Props = {
 };
 
 export function OcrResults({ pages, blocks, page, selectedBlock, onPageChange, onBlockSelect }: Props) {
+  const { t } = useI18n();
   const pageBlocks = blocks.filter((block) => block.page === page);
   return (
     <section className="ocr-results">
-      <div className="page-tabs" aria-label="OCR 页码">
+      <div className="page-tabs" aria-label={t("ocr.pages")}>
         {pages.map((item) => (
           <button key={item.page} className={item.page === page ? "active" : ""} onClick={() => onPageChange(item.page)}>
-            第 {item.page} 页
+            {t("ocr.page", { page: item.page })}
           </button>
         ))}
       </div>
       <div className="ocr-page-summary">
-        <strong>识别到 {pageBlocks.length} 个文本区域</strong>
-        <span>点击文字区域，可与左侧原文定位对照</span>
+        <strong>{t("ocr.summary", { count: pageBlocks.length })}</strong>
+        <span>{t("ocr.hint")}</span>
       </div>
       <div className="text-blocks">
         {pageBlocks.map((block, index) => (
@@ -34,7 +36,7 @@ export function OcrResults({ pages, blocks, page, selectedBlock, onPageChange, o
             <span>{block.text}</span><small>{Math.round(block.confidence * 100)}%</small>
           </button>
         ))}
-        {pageBlocks.length === 0 && <p className="quiet-state">这一页没有识别到文字。</p>}
+        {pageBlocks.length === 0 && <p className="quiet-state">{t("ocr.empty")}</p>}
       </div>
     </section>
   );

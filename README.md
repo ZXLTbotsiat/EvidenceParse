@@ -98,6 +98,9 @@ and [`docs/images/README.md`](docs/images/README.md).
   to the original location, and highlight the source region.
 - **Batch processing** — upload multiple documents or a ZIP archive and inspect
   progress and results per file.
+- **Five interface languages** — switch the complete review workspace between
+  English, Simplified Chinese, Japanese, German, and French; the preference is
+  remembered locally.
 - **Safe ZIP handling** — reject path traversal, encrypted entries, symbolic
   links, oversized archives, and suspicious compression ratios.
 - **Human review** — correct fields with optimistic revision checks, preserve

@@ -6,6 +6,7 @@ All notable changes to EvidenceParse are documented here.
 
 ### Added
 
+- Added a persistent whole-interface language switcher for English, Simplified Chinese, Japanese, German, and French.
 - Added real difficult-document showcases for skewed two-column scans, noisy typewriter text, illustrated old pages, and a clearly labelled synthetic handwritten-style note, including fixture provenance.
 - Added real product screenshots for source traceability, batch processing, and responsive review to the GitHub README.
 - Added a reproducible, checksum-pinned downloader and source guide for eight public OCR evaluation files.
@@ -14,6 +15,7 @@ All notable changes to EvidenceParse are documented here.
 
 ### Changed
 
+- Recaptured every README product screenshot with the English interface.
 - Rebalanced the review workspace for larger text, clearer hierarchy, and easier-to-hit controls.
 - Kept the side-by-side comparison available at tablet widths and added a focused source/result switcher on narrow screens.
 - On narrow screens, selecting OCR evidence now opens the source pane directly at the highlighted region.

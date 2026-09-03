@@ -8,20 +8,28 @@ import { ReviewWorkbench } from "../components/review-workbench";
 import { StructuredResults } from "../components/structured-results";
 import { approveDocument, correctField, createBatch, fetchBatch, fetchDocument, fetchReviewEvents, parseDocument } from "../lib/api";
 import { extractArchiveMember } from "../lib/archive";
+import { useI18n } from "../lib/i18n";
+import type { Language, MessageKey } from "../lib/i18n-catalog";
 import type { BatchItem, BatchJob, Evidence, OcrMode, OcrTextBlock, ParseResult, ReviewEvent } from "../lib/types";
-
-const MODE_COPY = {
-  generic: { title: "通用 OCR", description: "逐页文字、位置与置信度" },
-  invoice: { title: "专业发票 OCR", description: "字段、明细与金额校验" },
-};
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 const MAX_BATCH_BYTES = 100 * 1024 * 1024;
 const MAX_BATCH_FILES = 20;
 const SUPPORTED_FILE = /\.(pdf|png|jpe?g|zip)$/i;
 const TERMINAL_BATCH_STATUSES = new Set(["completed", "partial_failure", "failed"]);
+const FIELD_KEYS: Record<string, MessageKey> = {
+  invoice_number: "field.invoice_number", invoice_date: "field.invoice_date", subtotal: "field.subtotal", tax: "field.tax", total: "field.total",
+};
+const LINE_ITEM_FIELD_KEYS = {
+  description: "field.description", quantity: "field.quantity", unit_price: "field.unit_price", tax_rate: "field.tax_rate", amount: "field.amount",
+} as const satisfies Record<string, MessageKey>;
 
 export default function Home() {
+  const { language, languages, setLanguage, t } = useI18n();
+  const modeCopy = {
+    generic: { title: t("mode.generic"), description: t("mode.genericDescription") },
+    invoice: { title: t("mode.invoice"), description: t("mode.invoiceDescription") },
+  };
   const [file, setFile] = useState<File | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileUrl, setFileUrl] = useState("");
@@ -64,22 +72,22 @@ export default function Home() {
         setBatch(latest);
         if (!TERMINAL_BATCH_STATUSES.has(latest.status)) timer = setTimeout(poll, 700);
       } catch (caught) {
-        if (!cancelled) setError(caught instanceof Error ? caught.message : "批次状态查询失败。");
+        if (!cancelled) setError(caught instanceof Error ? caught.message : t("error.batchFetch"));
       }
     }
 
     timer = setTimeout(poll, 500);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [batch?.batch_id, apiKey]);
+  }, [batch?.batch_id, apiKey, t]);
 
   const correctionTargets = useMemo(() => result ? [
-    ...Object.entries(result.fields).map(([name, field]) => ({ path: `fields.${name}`, label: name.replaceAll("_", " "), value: field.value ?? "" })),
+    ...Object.entries(result.fields).map(([name, field]) => ({ path: `fields.${name}`, label: FIELD_KEYS[name] ? t(FIELD_KEYS[name]) : name.replaceAll("_", " "), value: field.value ?? "" })),
     ...result.line_items.flatMap((item, index) =>
       (["description", "quantity", "unit_price", "tax_rate", "amount"] as const)
         .filter((name) => item[name] !== undefined)
-        .map((name) => ({ path: `line_items.${index}.${name}`, label: `明细 ${item.index} · ${name.replaceAll("_", " ")}`, value: item[name]?.value ?? "" })),
+        .map((name) => ({ path: `line_items.${index}.${name}`, label: t("field.lineItem", { index: item.index, field: t(LINE_ITEM_FIELD_KEYS[name]) }), value: item[name]?.value ?? "" })),
     ),
-  ] : [], [result]);
+  ] : [], [result, t]);
 
   const isBatchSelection = selectedFiles.length > 1 || Boolean(selectedFiles[0]?.name.toLowerCase().endsWith(".zip"));
   const batchRunning = batch?.status === "queued" || batch?.status === "running";
@@ -87,26 +95,26 @@ export default function Home() {
   function selectFiles(nextFiles: File[]) {
     if (!nextFiles.length) return;
     if (nextFiles.length > MAX_BATCH_FILES) {
-      setError(`一次最多选择 ${MAX_BATCH_FILES} 个文件。`);
+      setError(t("error.tooMany", { count: MAX_BATCH_FILES }));
       return;
     }
     const archives = nextFiles.filter((item) => item.name.toLowerCase().endsWith(".zip"));
     if (archives.length && nextFiles.length > 1) {
-      setError("ZIP 压缩包请单独上传，普通文档可以一次选择多个。");
+      setError(t("error.archiveSingle"));
       return;
     }
     const unsupported = nextFiles.find((item) => !SUPPORTED_FILE.test(item.name));
     if (unsupported) {
-      setError(`${unsupported.name} 不受支持，仅支持 PDF、JPG、PNG 和 ZIP。`);
+      setError(t("error.unsupported", { name: unsupported.name }));
       return;
     }
     const oversized = nextFiles.find((item) => item.size > (item.name.toLowerCase().endsWith(".zip") ? MAX_BATCH_BYTES : MAX_FILE_BYTES));
     if (oversized) {
-      setError(`${oversized.name} 超过大小限制。单个文档最大 20 MB，ZIP 最大 100 MB。`);
+      setError(t("error.tooLarge", { name: oversized.name }));
       return;
     }
     if (nextFiles.reduce((total, item) => total + item.size, 0) > MAX_BATCH_BYTES) {
-      setError("本批文件总大小不能超过 100 MB。");
+      setError(t("error.batchTooLarge"));
       return;
     }
     const previewFile = nextFiles.length === 1 && !archives.length ? nextFiles[0] : null;
@@ -139,7 +147,7 @@ export default function Home() {
         setMobilePane("results");
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "识别失败，请稍后重试。");
+      setError(caught instanceof Error ? caught.message : t("error.ocr"));
     } finally { setLoading(false); }
   }
 
@@ -157,7 +165,7 @@ export default function Home() {
       setPage(1); setSelectedBlock(null); setEvents([]);
       setMobilePane("results");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "无法打开批次结果。");
+      setError(caught instanceof Error ? caught.message : t("error.openBatch"));
     } finally { setOpeningItemId(""); }
   }
 
@@ -189,7 +197,7 @@ export default function Home() {
       });
       setResult(payload); setReviewReason("");
       setEvents(await fetchReviewEvents(payload.document_id, apiKey));
-    } catch (caught) { setError(caught instanceof Error ? caught.message : "保存更正失败。"); }
+    } catch (caught) { setError(caught instanceof Error ? caught.message : t("error.save")); }
     finally { setSavingReview(false); }
   }
 
@@ -200,7 +208,7 @@ export default function Home() {
       const payload = await approveDocument(result.document_id, apiKey, reviewer, reviewReason, result.review.revision);
       setResult(payload); setReviewReason("");
       setEvents(await fetchReviewEvents(payload.document_id, apiKey));
-    } catch (caught) { setError(caught instanceof Error ? caught.message : "批准复核失败。"); }
+    } catch (caught) { setError(caught instanceof Error ? caught.message : t("error.approve")); }
     finally { setSavingReview(false); }
   }
 
@@ -208,34 +216,40 @@ export default function Home() {
     <main>
       <header className="app-header">
         <div className="brand-mark">EP</div>
-        <div><h1>EvidenceParse</h1><p>让每一项识别结果，都能回到原文核对。</p></div>
+        <div><h1>EvidenceParse</h1><p>{t("app.tagline")}</p></div>
         <div className="header-actions">
-          <details className="api-key"><summary>API Key</summary><input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="off" placeholder="本地模式可不填" /></details>
-          <span className="local-badge">本地 OCR · 文件不外传</span>
+          <label className="language-picker">
+            <span>{t("language.label")}</span>
+            <select value={language} onChange={(event) => setLanguage(event.target.value as Language)}>
+              {languages.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+            </select>
+          </label>
+          <details className="api-key"><summary>API Key</summary><input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="off" placeholder={t("api.placeholder")} /></details>
+          <span className="local-badge">{t("app.localBadge")}</span>
         </div>
       </header>
 
       <section className="control-bar">
         <label className="file-picker">
           <input type="file" accept=".pdf,.png,.jpg,.jpeg,.zip" multiple disabled={batchRunning} onChange={chooseFile} />
-          <span>{selectedFiles.length ? "更换文件" : "选择文件"}</span>
-          <strong>{selectedFiles.length > 1 ? `已选择 ${selectedFiles.length} 个文件` : selectedFiles[0]?.name ?? "支持多选文档或单个 ZIP"}</strong>
+          <span>{selectedFiles.length ? t("file.change") : t("file.select")}</span>
+          <strong>{selectedFiles.length > 1 ? t("file.selected", { count: selectedFiles.length }) : selectedFiles[0]?.name ?? t("file.support")}</strong>
         </label>
-        <div className="mode-picker" aria-label="OCR 类型">
-          {(Object.keys(MODE_COPY) as OcrMode[]).map((value) => (
+        <div className="mode-picker" aria-label={t("mode.label")}>
+          {(Object.keys(modeCopy) as OcrMode[]).map((value) => (
             <button key={value} className={mode === value ? "active" : ""} disabled={batchRunning} onClick={() => setMode(value)}>
-              <strong>{MODE_COPY[value].title}</strong><small>{MODE_COPY[value].description}</small>
+              <strong>{modeCopy[value].title}</strong><small>{modeCopy[value].description}</small>
             </button>
           ))}
         </div>
-        <button className="primary-action" disabled={!selectedFiles.length || loading || batchRunning} onClick={runOcr}>{loading ? "正在创建…" : batchRunning ? "批量识别中…" : isBatchSelection ? "批量识别" : "开始识别"}</button>
+        <button className="primary-action" disabled={!selectedFiles.length || loading || batchRunning} onClick={runOcr}>{loading ? t("action.creating") : batchRunning ? t("action.batchRunning") : isBatchSelection ? t("action.batch") : t("action.start")}</button>
       </section>
 
       {error && <p className="error-banner" role="alert">{error}</p>}
 
-      <nav className="mobile-pane-switcher" aria-label="对照视图">
-        <button className={mobilePane === "source" ? "active" : ""} onClick={() => setMobilePane("source")}>原文</button>
-        <button className={mobilePane === "results" ? "active" : ""} onClick={() => setMobilePane("results")}>识别结果{result && <span aria-hidden="true" />}</button>
+      <nav className="mobile-pane-switcher" aria-label={t("view.label")}>
+        <button className={mobilePane === "source" ? "active" : ""} onClick={() => setMobilePane("source")}>{t("view.source")}</button>
+        <button className={mobilePane === "results" ? "active" : ""} onClick={() => setMobilePane("results")}>{t("view.results")}{result && <span aria-hidden="true" />}</button>
       </nav>
 
       <section className={`comparison-workspace mobile-pane-${mobilePane}`}>
@@ -246,21 +260,21 @@ export default function Home() {
         )}
         <div className="result-panel">
           <div className="panel-title result-title">
-            <div><span className="kicker">识别结果</span><strong>{isBatchSelection && !viewingBatchItem ? "批量任务" : result ? MODE_COPY[result.schema_name].title : "等待识别"}</strong></div>
+            <div><span className="kicker">{t("result.title")}</span><strong>{isBatchSelection && !viewingBatchItem ? t("result.batch") : result ? modeCopy[result.schema_name].title : t("result.waiting")}</strong></div>
             <div className="result-heading-actions">
-              {isBatchSelection && viewingBatchItem && <button className="batch-back" onClick={() => { setViewingBatchItem(false); setMobilePane("results"); }}>返回批次</button>}
+              {isBatchSelection && viewingBatchItem && <button className="batch-back" onClick={() => { setViewingBatchItem(false); setMobilePane("results"); }}>{t("result.back")}</button>}
               {result && (!isBatchSelection || viewingBatchItem) && <span className="source-badge">{result.source_kind.replaceAll("_", " ")}</span>}
             </div>
           </div>
           {isBatchSelection && !viewingBatchItem ? (
             <BatchResults selectedFiles={selectedFiles} batch={batch} openingItemId={openingItemId} onOpen={openBatchItem} />
           ) : !result ? (
-            <div className="result-empty"><span>01</span><p>先在左侧确认文件内容，再选择通用或专业 OCR。</p><span>02</span><p>识别后点击任意文字区域，即可与原文定位对照。</p></div>
+            <div className="result-empty"><span>01</span><p>{t("empty.first")}</p><span>02</span><p>{t("empty.second")}</p></div>
           ) : (
             <>
               {result.schema_name === "invoice" && <div className="result-tabs">
-                <button className={resultTab === "ocr" ? "active" : ""} onClick={() => setResultTab("ocr")}>OCR 全文</button>
-                <button className={resultTab === "professional" ? "active" : ""} onClick={() => setResultTab("professional")}>专业字段</button>
+                <button className={resultTab === "ocr" ? "active" : ""} onClick={() => setResultTab("ocr")}>{t("result.ocrText")}</button>
+                <button className={resultTab === "professional" ? "active" : ""} onClick={() => setResultTab("professional")}>{t("result.fields")}</button>
               </div>}
               {resultTab === "ocr" ? (
                 <OcrResults pages={result.pages} blocks={result.text_blocks} page={page} selectedBlock={selectedBlock}

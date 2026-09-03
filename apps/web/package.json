@@ -2,11 +2,13 @@
   "name": "evidence-parse-web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:i18n": "node --test lib/i18n-catalog.test.ts"
   },
   "dependencies": {
     "fflate": "^0.8.3",

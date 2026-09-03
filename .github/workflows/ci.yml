@@ -60,6 +60,7 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
+      - run: npm run test:i18n
       - run: npm run build
 
   python-sdk:
