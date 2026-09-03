@@ -13,6 +13,8 @@ plus durable duplicate detection and an audited human-review workflow.
 ## What works today
 
 - `PDF`, `JPG`, `JPEG`, and `PNG` upload contract
+- generic OCR with ordered text blocks, source coordinates, and confidence
+- professional invoice OCR layered on the same raw-text result
 - digital-versus-scanned PDF detection
 - local CPU OCR for scanned PDFs and images using bundled ONNX models
 - image orientation, contrast, and small-input normalization before OCR
@@ -33,7 +35,8 @@ plus durable duplicate detection and an audited human-review workflow.
 - liveness/readiness probes, defensive headers, and non-root containers
 - a separately packaged Python SDK
 - structured JSON API
-- browser review screen
+- immediate browser preview with side-by-side OCR comparison and image-region highlighting
+- browser review screen for professional fields and audit history
 - Docker Compose development environment
 - API and parser tests
 
@@ -135,12 +138,14 @@ curl -F "file=@invoice.pdf" -F "schema=invoice" \
   http://localhost:8000/api/v1/documents/parse
 ```
 
-The response includes extracted fields, evidence locations, validations,
-warnings, line items, the selected schema name, and a content fingerprint.
+The response includes raw pages and ordered text blocks with coordinates and
+confidence. Professional schemas additionally return extracted fields,
+evidence locations, validations, warnings, and line items.
 
-The `schema` form field currently accepts `invoice`. New document types can be
-added by implementing the small schema contract and registering the schema,
-without changing PDF, image, or OCR ingestion.
+The `schema` form field accepts `generic` for document-wide OCR or `invoice`
+for professional invoice extraction. New document types can be added by
+implementing the small schema contract and registering the schema, without
+changing PDF, image, or OCR ingestion.
 
 Additional review endpoints:
 

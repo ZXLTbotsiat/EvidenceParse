@@ -2,6 +2,21 @@
 
 All notable changes to EvidenceParse are documented here.
 
+## [0.7.0] - 2026-09-03
+
+### Added
+
+- Generic OCR mode with per-page text, ordered text blocks, source coordinates, and confidence.
+- Professional invoice OCR mode layered on the same auditable raw-text result.
+- Immediate in-browser PDF and image preview before recognition starts.
+- Side-by-side source comparison, page navigation, clickable OCR blocks, and image overlays.
+- Safe source-content backfill for duplicate records created before raw OCR persistence.
+
+### Changed
+
+- Reworked the browser UI into a calm review workspace with readable Chinese and Latin system fonts.
+- Split frontend API contracts, preview, OCR, structured results, and review controls into focused modules.
+
 ## [0.6.0] - 2026-09-02
 
 ### Added

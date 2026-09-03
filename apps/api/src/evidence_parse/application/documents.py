@@ -55,6 +55,10 @@ class DocumentApplicationService:
         schema = self.schema_registry.get(schema_name)
         existing = self.repository.find_by_fingerprint(fingerprint, schema.name)
         if existing is not None:
+            if not existing.pages and not existing.text_blocks:
+                enriched = self.parser.parse(filename, content_type, content, schema.name)
+                enriched.document_id = existing.document_id
+                self.repository.enrich_source_content(enriched)
             return self._record_duplicate(existing, filename, content_type)
 
         result = self.parser.parse(filename, content_type, content, schema.name)

@@ -10,7 +10,7 @@ from evidence_parse import __version__
 from evidence_parse.api.routes import router
 from evidence_parse.application import BatchApplicationService, DocumentApplicationService
 from evidence_parse.persistence import BatchRepository, Database, DocumentRepository
-from evidence_parse.schemas import InvoiceSchema, SchemaRegistry
+from evidence_parse.schemas import GenericOcrSchema, InvoiceSchema, SchemaRegistry
 from evidence_parse.service import DocumentParser
 from evidence_parse.settings import Settings
 
@@ -24,7 +24,7 @@ def create_app(
     should_create_schema = (
         settings.auto_create_schema if auto_create_schema is None else auto_create_schema
     )
-    schemas = SchemaRegistry([InvoiceSchema()])
+    schemas = SchemaRegistry([GenericOcrSchema(), InvoiceSchema()])
     parser = DocumentParser(schema_registry=schemas)
     repository = DocumentRepository(database.engine)
     service = DocumentApplicationService(parser, repository, schemas)

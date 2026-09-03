@@ -1,7 +1,9 @@
+import json
 import uuid
 
 import fitz
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 
 def _invoice_pdf(invoice_number: str, total: str = "236.00") -> bytes:
@@ -48,6 +50,28 @@ def test_duplicate_upload_reuses_the_canonical_document(client: TestClient) -> N
     stored = client.get(f"/api/v1/documents/{first['document_id']}").json()
     assert stored["filename"] == "original.pdf"
     assert stored["duplicate"]["occurrences"] == 2
+
+
+def test_duplicate_upload_backfills_source_content_for_legacy_record(client: TestClient) -> None:
+    content = _invoice_pdf(f"LEGACY-{uuid.uuid4().hex[:8]}")
+    first = _upload(client, content).json()
+    database = client.app.state.database
+    with database.engine.begin() as connection:
+        row = connection.execute(
+            text("SELECT result_json FROM documents WHERE id = :id"), {"id": first["document_id"]}
+        ).scalar_one()
+        payload = json.loads(row) if isinstance(row, str) else row
+        payload.pop("pages", None)
+        payload.pop("text_blocks", None)
+        connection.execute(
+            text("UPDATE documents SET result_json = :payload WHERE id = :id"),
+            {"payload": json.dumps(payload), "id": first["document_id"]},
+        )
+
+    duplicate = _upload(client, content, "legacy-copy.pdf").json()
+
+    assert duplicate["pages"]
+    assert duplicate["text_blocks"]
 
 
 def test_human_correction_revalidates_and_creates_an_audit_event(

@@ -1,129 +1,76 @@
 "use client";
 
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { DocumentPreview } from "../components/document-preview";
+import { OcrResults } from "../components/ocr-results";
+import { ReviewWorkbench } from "../components/review-workbench";
+import { StructuredResults } from "../components/structured-results";
+import { approveDocument, correctField, fetchReviewEvents, parseDocument } from "../lib/api";
+import type { Evidence, OcrMode, OcrTextBlock, ParseResult, ReviewEvent } from "../lib/types";
 
-type Evidence = {
-  page: number;
-  text: string;
-  bbox?: { x0: number; y0: number; x1: number; y1: number } | null;
+const MODE_COPY = {
+  generic: { title: "通用 OCR", description: "逐页文字、位置与置信度" },
+  invoice: { title: "专业发票 OCR", description: "字段、明细与金额校验" },
 };
-
-type FieldResult = {
-  value?: string | null;
-  confidence: number;
-  evidence: Evidence[];
-  review_required: boolean;
-  review_reason?: string | null;
-  source: "extracted" | "human_corrected";
-  original_value?: string | null;
-  reviewed_by?: string | null;
-};
-
-type LineItem = {
-  index: number;
-  description: FieldResult;
-  quantity?: FieldResult | null;
-  unit_price?: FieldResult | null;
-  tax_rate?: FieldResult | null;
-  amount?: FieldResult | null;
-};
-
-type ParseResult = {
-  document_id: string;
-  filename: string;
-  schema_name: string;
-  source_kind: string;
-  page_count: number;
-  fields: Record<string, FieldResult>;
-  line_items: LineItem[];
-  validations: { code: string; passed?: boolean | null; message: string }[];
-  warnings: string[];
-  duplicate: {
-    is_duplicate: boolean;
-    canonical_document_id?: string | null;
-    occurrences: number;
-  };
-  review: {
-    status: "not_required" | "pending" | "in_review" | "approved";
-    revision: number;
-    unresolved_fields: string[];
-  };
-};
-
-type ReviewEvent = {
-  event_id: string;
-  revision: number;
-  event_type: string;
-  field_path?: string | null;
-  previous_value?: unknown;
-  new_value?: unknown;
-  reason: string;
-  reviewer: string;
-};
-
-type CorrectionTarget = { path: string; label: string; value: string };
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
+  const [fileUrl, setFileUrl] = useState("");
+  const [mode, setMode] = useState<OcrMode>("generic");
   const [result, setResult] = useState<ParseResult | null>(null);
+  const [resultTab, setResultTab] = useState<"ocr" | "professional">("ocr");
+  const [page, setPage] = useState(1);
+  const [selectedBlock, setSelectedBlock] = useState<OcrTextBlock | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [apiKey, setApiKey] = useState("");
   const [events, setEvents] = useState<ReviewEvent[]>([]);
   const [correctionPath, setCorrectionPath] = useState("");
   const [correctionValue, setCorrectionValue] = useState("");
   const [reviewer, setReviewer] = useState("");
   const [reviewReason, setReviewReason] = useState("");
   const [savingReview, setSavingReview] = useState(false);
-  const [apiKey, setApiKey] = useState("");
 
-  function apiHeaders(extra: Record<string, string> = {}) {
-    return apiKey ? { ...extra, "X-API-Key": apiKey } : extra;
+  useEffect(() => {
+    if (!file) { setFileUrl(""); return; }
+    const url = URL.createObjectURL(file);
+    setFileUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const correctionTargets = useMemo(() => result ? [
+    ...Object.entries(result.fields).map(([name, field]) => ({ path: `fields.${name}`, label: name.replaceAll("_", " "), value: field.value ?? "" })),
+    ...result.line_items.flatMap((item, index) =>
+      (["description", "quantity", "unit_price", "tax_rate", "amount"] as const)
+        .filter((name) => item[name] !== undefined)
+        .map((name) => ({ path: `line_items.${index}.${name}`, label: `明细 ${item.index} · ${name.replaceAll("_", " ")}`, value: item[name]?.value ?? "" })),
+    ),
+  ] : [], [result]);
+
+  function chooseFile(event: ChangeEvent<HTMLInputElement>) {
+    setFile(event.target.files?.[0] ?? null);
+    setResult(null); setSelectedBlock(null); setPage(1); setError("");
   }
 
-  const correctionTargets: CorrectionTarget[] = result
-    ? [
-        ...Object.entries(result.fields).map(([name, field]) => ({
-          path: `fields.${name}`,
-          label: name.replaceAll("_", " "),
-          value: field.value ?? "",
-        })),
-        ...result.line_items.flatMap((item, index) =>
-          (["description", "quantity", "unit_price", "tax_rate", "amount"] as const)
-            .filter((name) => item[name] !== undefined)
-            .map((name) => ({
-              path: `line_items.${index}.${name}`,
-              label: `item ${item.index} · ${name.replaceAll("_", " ")}`,
-              value: item[name]?.value ?? "",
-            })),
-        ),
-      ]
-    : [];
-
-  async function parseDocument() {
+  async function runOcr() {
     if (!file) return;
-    setLoading(true);
-    setError("");
-    const body = new FormData();
-    body.append("file", file);
+    setLoading(true); setError("");
     try {
-      const response = await fetch(`${API_URL}/api/v1/documents/parse`, {
-        method: "POST",
-        headers: apiHeaders(),
-        body,
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.detail ?? "Unable to parse document");
+      const payload = await parseDocument(file, mode, apiKey);
       setResult(payload);
-      setEvents([]);
-      setCorrectionPath("");
-      setCorrectionValue("");
+      setResultTab(mode === "invoice" ? "professional" : "ocr");
+      setPage(1); setSelectedBlock(null); setEvents([]);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to parse document");
-    } finally {
-      setLoading(false);
-    }
+      setError(caught instanceof Error ? caught.message : "识别失败，请稍后重试。");
+    } finally { setLoading(false); }
+  }
+
+  function selectEvidence(evidence: Evidence) {
+    if (!result || !evidence.bbox) return;
+    const matching = result.text_blocks.find((block) => block.page === evidence.page && block.text.includes(evidence.text));
+    setPage(evidence.page);
+    setSelectedBlock(matching ?? { ...evidence, bbox: evidence.bbox, confidence: 1 });
+    setResultTab("ocr");
   }
 
   function chooseCorrection(path: string) {
@@ -131,245 +78,91 @@ export default function Home() {
     setCorrectionValue(correctionTargets.find((target) => target.path === path)?.value ?? "");
   }
 
-  async function loadEvents(documentId: string) {
-    const response = await fetch(`${API_URL}/api/v1/documents/${documentId}/review-events`, {
-      headers: apiHeaders(),
-    });
-    if (response.ok) setEvents(await response.json());
+  async function loadEvents() {
+    if (result) setEvents(await fetchReviewEvents(result.document_id, apiKey));
   }
 
   async function saveCorrection() {
-    if (!result || !correctionPath || !reviewer || reviewReason.length < 3) return;
+    if (!result || !correctionPath) return;
     setSavingReview(true);
-    setError("");
     try {
-      const response = await fetch(
-        `${API_URL}/api/v1/documents/${result.document_id}/corrections`,
-        {
-          method: "POST",
-          headers: apiHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({
-            field_path: correctionPath,
-            value: correctionValue || null,
-            reason: reviewReason,
-            reviewer,
-            expected_revision: result.review.revision,
-          }),
-        },
-      );
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.detail ?? "Unable to save correction");
-      setResult(payload);
-      setReviewReason("");
-      await loadEvents(payload.document_id);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to save correction");
-    } finally {
-      setSavingReview(false);
-    }
+      const payload = await correctField(result.document_id, apiKey, {
+        field_path: correctionPath, value: correctionValue || null, reason: reviewReason,
+        reviewer, expected_revision: result.review.revision,
+      });
+      setResult(payload); setReviewReason("");
+      setEvents(await fetchReviewEvents(payload.document_id, apiKey));
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "保存更正失败。"); }
+    finally { setSavingReview(false); }
   }
 
   async function approveReview() {
-    if (!result || !reviewer || reviewReason.length < 3) return;
+    if (!result) return;
     setSavingReview(true);
-    setError("");
     try {
-      const response = await fetch(`${API_URL}/api/v1/documents/${result.document_id}/review`, {
-        method: "POST",
-        headers: apiHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({
-          status: "approved",
-          note: reviewReason,
-          reviewer,
-          expected_revision: result.review.revision,
-        }),
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.detail ?? "Unable to approve review");
-      setResult(payload);
-      setReviewReason("");
-      await loadEvents(payload.document_id);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to approve review");
-    } finally {
-      setSavingReview(false);
-    }
-  }
-
-  function chooseFile(event: ChangeEvent<HTMLInputElement>) {
-    setFile(event.target.files?.[0] ?? null);
-    setResult(null);
-    setError("");
+      const payload = await approveDocument(result.document_id, apiKey, reviewer, reviewReason, result.review.revision);
+      setResult(payload); setReviewReason("");
+      setEvents(await fetchReviewEvents(payload.document_id, apiKey));
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "批准复核失败。"); }
+    finally { setSavingReview(false); }
   }
 
   return (
     <main>
-      <header>
-        <div className="eyebrow">EVIDENCE-FIRST DOCUMENT AI</div>
-        <h1>Extract facts.<br />Keep the proof.</h1>
-        <p className="lede">
-          EvidenceParse turns invoices into structured data while preserving the page,
-          source text, confidence, and review boundary behind every value.
-        </p>
+      <header className="app-header">
+        <div className="brand-mark">EP</div>
+        <div><h1>EvidenceParse</h1><p>让每一项识别结果，都能回到原文核对。</p></div>
+        <span className="local-badge">本地 OCR · 文件不外传</span>
       </header>
 
-      <section className="workspace">
-        <div className="upload-panel">
-          <span className="step">01 / INGEST</span>
-          <label className="drop-zone">
-            <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={chooseFile} />
-            <span className="drop-icon">↗</span>
-            <strong>{file ? file.name : "Choose a document"}</strong>
-            <small>PDF, JPG or PNG · up to 20 MB</small>
-          </label>
-          <button disabled={!file || loading} onClick={parseDocument}>
-            {loading ? "Reading evidence…" : "Parse document"}
-          </button>
-          <label className="api-key-field">
-            API key <small>optional in local mode</small>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(event) => setApiKey(event.target.value)}
-              autoComplete="off"
-            />
-          </label>
-          {error && <p className="error">{error}</p>}
-          <div className="principle">
-            <span>NO SILENT GUESSES</span>
-            Missing or uncertain fields are routed to review instead of being invented.
-          </div>
+      <section className="control-bar">
+        <label className="file-picker">
+          <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={chooseFile} />
+          <span>{file ? "更换文件" : "选择文件"}</span>
+          <strong>{file?.name ?? "支持 PDF、JPG、PNG，最大 20 MB"}</strong>
+        </label>
+        <div className="mode-picker" aria-label="OCR 类型">
+          {(Object.keys(MODE_COPY) as OcrMode[]).map((value) => (
+            <button key={value} className={mode === value ? "active" : ""} onClick={() => setMode(value)}>
+              <strong>{MODE_COPY[value].title}</strong><small>{MODE_COPY[value].description}</small>
+            </button>
+          ))}
         </div>
+        <button className="primary-action" disabled={!file || loading} onClick={runOcr}>{loading ? "正在识别…" : "开始识别"}</button>
+        <details className="api-key"><summary>API Key</summary><input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} autoComplete="off" placeholder="本地模式可不填" /></details>
+      </section>
 
+      {error && <p className="error-banner">{error}</p>}
+
+      <section className="comparison-workspace">
+        <DocumentPreview file={file} fileUrl={fileUrl} page={page} pageInfo={result?.pages.find((item) => item.page === page)} selectedBlock={selectedBlock} />
         <div className="result-panel">
-          <div className="result-heading">
-            <span className="step">02 / VERIFY</span>
-            {result && <span className="source-kind">{result.source_kind.replaceAll("_", " ")}</span>}
+          <div className="panel-title result-title">
+            <div><span className="kicker">识别结果</span><strong>{result ? MODE_COPY[result.schema_name].title : "等待识别"}</strong></div>
+            {result && <span className="source-badge">{result.source_kind.replaceAll("_", " ")}</span>}
           </div>
-
           {!result ? (
-            <div className="empty-state">
-              <div className="scan-line" />
-              <p>Upload an invoice to see extracted values and their source evidence.</p>
-            </div>
+            <div className="result-empty"><span>01</span><p>先在左侧确认文件内容，再选择通用或专业 OCR。</p><span>02</span><p>识别后点击任意文字区域，即可与原文定位对照。</p></div>
           ) : (
-            <div className="results">
-              <div className="document-meta">
-                <strong>{result.filename}</strong>
-                <span>{result.schema_name} · {result.page_count} page{result.page_count === 1 ? "" : "s"}</span>
-              </div>
-              <div className="review-summary">
-                <span>Review: {result.review.status.replaceAll("_", " ")}</span>
-                <span>Revision {result.review.revision}</span>
-                <span>{result.review.unresolved_fields.length} unresolved</span>
-              </div>
-              {result.duplicate.is_duplicate && (
-                <p className="duplicate-note">
-                  Exact duplicate detected · canonical document reused · {result.duplicate.occurrences} uploads
-                </p>
-              )}
-              {Object.entries(result.fields).map(([name, field]) => (
-                <article className="field" key={name}>
-                  <div>
-                    <span className="field-name">{name.replaceAll("_", " ")}</span>
-                    <strong>{field.value ?? "Unable to verify"}</strong>
-                  </div>
-                  <div className="field-status">
-                    <span className={field.review_required ? "review" : "verified"}>
-                      {field.review_required ? "Review" : "Verified"}
-                    </span>
-                    <span>{Math.round(field.confidence * 100)}%</span>
-                  </div>
-                  {field.source === "human_corrected" && (
-                    <p className="human-correction">
-                      Human corrected{field.original_value !== null ? ` · original: ${field.original_value ?? "empty"}` : ""}
-                    </p>
-                  )}
-                  {field.evidence[0] && (
-                    <p className="evidence">Page {field.evidence[0].page} · “{field.evidence[0].text}”</p>
-                  )}
-                  {!field.evidence[0] && field.review_reason && (
-                    <p className="evidence muted">{field.review_reason}</p>
-                  )}
-                </article>
-              ))}
-              {result.line_items.length > 0 && (
-                <section className="line-items">
-                  <span className="field-name">LINE ITEMS</span>
-                  {result.line_items.map((item) => (
-                    <article key={item.index} className="line-item">
-                      <strong>{item.description.value ?? "Unable to verify"}</strong>
-                      <span>Qty {item.quantity?.value ?? "—"}</span>
-                      <span>Unit {item.unit_price?.value ?? "—"}</span>
-                      <span>Amount {item.amount?.value ?? "—"}</span>
-                      <span className={item.description.review_required ? "review" : "verified"}>
-                        {item.description.review_required ? "Review" : "Verified"}
-                      </span>
-                    </article>
-                  ))}
-                </section>
-              )}
-              <div className="validations">
-                {result.validations.map((validation) => (
-                  <p key={validation.code}>
-                    <span>{validation.passed === true ? "✓" : validation.passed === false ? "!" : "?"}</span>
-                    {validation.message}
-                  </p>
-                ))}
-              </div>
-              <section className="review-workbench">
-                <div>
-                  <span className="field-name">HUMAN REVIEW</span>
-                  <h2>Correct with an audit trail</h2>
-                </div>
-                <label>
-                  Field
-                  <select value={correctionPath} onChange={(event) => chooseCorrection(event.target.value)}>
-                    <option value="">Choose a field</option>
-                    {correctionTargets.map((target) => (
-                      <option key={target.path} value={target.path}>{target.label}</option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Correct value
-                  <input value={correctionValue} onChange={(event) => setCorrectionValue(event.target.value)} />
-                </label>
-                <label>
-                  Reviewer
-                  <input value={reviewer} onChange={(event) => setReviewer(event.target.value)} placeholder="Your name" />
-                </label>
-                <label>
-                  Reason or review note
-                  <textarea value={reviewReason} onChange={(event) => setReviewReason(event.target.value)} placeholder="Why is this change correct?" />
-                </label>
-                <div className="review-actions">
-                  <button disabled={savingReview || !correctionPath || !reviewer || reviewReason.length < 3} onClick={saveCorrection}>
-                    Save correction
-                  </button>
-                  <button className="secondary" disabled={savingReview || !reviewer || reviewReason.length < 3 || result.review.unresolved_fields.length > 0} onClick={approveReview}>
-                    Approve review
-                  </button>
-                </div>
-                <button className="audit-toggle" onClick={() => loadEvents(result.document_id)}>
-                  Refresh audit history
-                </button>
-                {events.length > 0 && (
-                  <div className="audit-events">
-                    {events.map((event) => (
-                      <p key={event.event_id}>
-                        <strong>r{event.revision} · {event.event_type.replaceAll("_", " ")}</strong>
-                        <span>{event.field_path ?? "review"} · {event.reviewer}</span>
-                        <span>{event.reason}</span>
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </section>
-            </div>
+            <>
+              {result.schema_name === "invoice" && <div className="result-tabs">
+                <button className={resultTab === "ocr" ? "active" : ""} onClick={() => setResultTab("ocr")}>OCR 全文</button>
+                <button className={resultTab === "professional" ? "active" : ""} onClick={() => setResultTab("professional")}>专业字段</button>
+              </div>}
+              {resultTab === "ocr" ? (
+                <OcrResults pages={result.pages} blocks={result.text_blocks} page={page} selectedBlock={selectedBlock}
+                  onPageChange={(nextPage) => { setPage(nextPage); setSelectedBlock(null); }}
+                  onBlockSelect={(block) => { setPage(block.page); setSelectedBlock(block); }} />
+              ) : <StructuredResults result={result} onEvidenceSelect={selectEvidence} />}
+            </>
           )}
         </div>
       </section>
+
+      {result?.schema_name === "invoice" && <ReviewWorkbench result={result} events={events} targets={correctionTargets}
+        correctionPath={correctionPath} correctionValue={correctionValue} reviewer={reviewer} reason={reviewReason} saving={savingReview}
+        onPathChange={chooseCorrection} onValueChange={setCorrectionValue} onReviewerChange={setReviewer} onReasonChange={setReviewReason}
+        onSave={saveCorrection} onApprove={approveReview} onRefreshEvents={loadEvents} />}
     </main>
   );
 }

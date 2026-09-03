@@ -98,6 +98,15 @@ class PageContent(BaseModel):
     text: str
 
 
+class OcrTextBlock(BaseModel):
+    """One ordered OCR/text-layer block in source-document coordinates."""
+
+    page: int = Field(description="One-based page number")
+    text: str
+    bbox: BoundingBox
+    confidence: float = Field(ge=0, le=1)
+
+
 class DocumentParseResult(BaseModel):
     document_id: str
     content_fingerprint: str
@@ -106,6 +115,8 @@ class DocumentParseResult(BaseModel):
     schema_name: str
     source_kind: SourceKind
     page_count: int
+    pages: List[PageContent] = Field(default_factory=list)
+    text_blocks: List[OcrTextBlock] = Field(default_factory=list)
     fields: Dict[str, ExtractedValue]
     line_items: List[InvoiceLineItem] = Field(default_factory=list)
     validations: List[ValidationResult] = Field(default_factory=list)

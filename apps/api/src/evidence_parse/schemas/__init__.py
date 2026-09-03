@@ -6,10 +6,12 @@ from evidence_parse.schemas.base import (
     SchemaRegistry,
     UnsupportedSchemaError,
 )
+from evidence_parse.schemas.generic import GenericOcrSchema
 from evidence_parse.schemas.invoice import InvoiceSchema
 
 __all__ = [
     "DocumentSchema",
+    "GenericOcrSchema",
     "InvoiceSchema",
     "SchemaExtraction",
     "SchemaRegistry",

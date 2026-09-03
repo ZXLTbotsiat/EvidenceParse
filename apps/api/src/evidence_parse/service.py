@@ -6,10 +6,15 @@ import fitz
 from PIL import UnidentifiedImageError
 
 from evidence_parse.extractors.pdf import PdfTextExtractor, TextSpan
-from evidence_parse.models import DocumentParseResult, PageContent, SourceKind
+from evidence_parse.models import DocumentParseResult, OcrTextBlock, PageContent, SourceKind
 from evidence_parse.ocr import OcrProvider, PreparedImage, RapidOcrProvider
 from evidence_parse.ocr.preprocessing import ImagePreprocessor, ScannedPdfRenderer
-from evidence_parse.schemas import DocumentSchema, InvoiceSchema, SchemaRegistry
+from evidence_parse.schemas import (
+    DocumentSchema,
+    GenericOcrSchema,
+    InvoiceSchema,
+    SchemaRegistry,
+)
 
 
 class UnsupportedDocumentError(ValueError):
@@ -30,7 +35,9 @@ class DocumentParser:
         self.image_preprocessor = ImagePreprocessor()
         self.pdf_renderer = ScannedPdfRenderer(self.image_preprocessor)
         self.ocr_provider = ocr_provider or RapidOcrProvider()
-        self.schema_registry = schema_registry or SchemaRegistry([InvoiceSchema()])
+        self.schema_registry = schema_registry or SchemaRegistry(
+            [GenericOcrSchema(), InvoiceSchema()]
+        )
 
     def parse(
         self,
@@ -136,6 +143,16 @@ class DocumentParser:
             schema_name=schema.name,
             source_kind=source_kind,
             page_count=len(pages),
+            pages=pages,
+            text_blocks=[
+                OcrTextBlock(
+                    page=span.page,
+                    text=span.text,
+                    bbox=span.bbox,
+                    confidence=span.confidence,
+                )
+                for span in spans
+            ],
             fields=extraction.fields,
             line_items=extraction.line_items,
             validations=extraction.validations,

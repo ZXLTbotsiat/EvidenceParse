@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "evidence-parse-sdk"
-version = "0.6.0"
+version = "0.7.0"
 description = "Typed Python client for a self-hosted EvidenceParse API"
 readme = "README.md"
 requires-python = ">=3.9"
