@@ -6,6 +6,7 @@ All notable changes to EvidenceParse are documented here.
 
 ### Changed
 
+- The empty source-preview panel now accepts drag-and-drop, click, and keyboard file selection.
 - Compacted the OCR toolbar and made the comparison workspace fit the available viewport.
 - Images now default to a whole-document fit while preserving accurate evidence overlays.
 - OCR result lists use the remaining panel height instead of fixed nested scroll regions.

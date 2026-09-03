@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { OcrTextBlock, PageContent } from "../lib/types";
 
 type Props = {
@@ -9,12 +9,14 @@ type Props = {
   page: number;
   pageInfo?: PageContent;
   selectedBlock?: OcrTextBlock | null;
+  onFileSelect: (file: File) => void;
 };
 
-export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock }: Props) {
+export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, onFileSelect }: Props) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [stageSize, setStageSize] = useState<{ width: number; height: number } | null>(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const fitImage = useCallback(() => {
     const canvas = canvasRef.current;
@@ -39,14 +41,51 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock }
     setStageSize(null);
   }, [fileUrl]);
 
-  if (!file || !fileUrl) {
+  function acceptInput(event: ChangeEvent<HTMLInputElement>) {
+    const selected = event.currentTarget.files?.[0];
+    if (selected) onFileSelect(selected);
+    event.currentTarget.value = "";
+  }
+
+  function acceptDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setDragActive(false);
+    const dropped = event.dataTransfer.files[0];
+    if (dropped) onFileSelect(dropped);
+  }
+
+  if (!file) {
     return (
-      <div className="preview-empty">
-        <span>原文预览</span>
-        <strong>{file ? "正在准备原文预览" : "选择文件后，原文会先显示在这里"}</strong>
-        <p>文件只在当前浏览器中预览，不会因为预览额外上传。</p>
+      <div
+        className="preview-empty-shell"
+        onDragEnter={(event) => { event.preventDefault(); setDragActive(true); }}
+        onDragOver={(event) => { event.preventDefault(); setDragActive(true); }}
+        onDragLeave={() => setDragActive(false)}
+        onDrop={acceptDrop}
+      >
+        <input
+          id="source-drop-input"
+          className="drop-input"
+          type="file"
+          accept=".pdf,.png,.jpg,.jpeg"
+          onChange={acceptInput}
+          aria-label="拖拽或点击上传文件"
+        />
+        <div
+          className={`preview-empty drop-target ${dragActive ? "drag-active" : ""}`}
+          aria-hidden="true"
+        >
+          <span className="drop-icon">↑</span>
+          <strong>{dragActive ? "松开即可预览" : "拖拽文件到这里"}</strong>
+          <p>也可以点击选择 PDF、JPG 或 PNG，最大 20 MB</p>
+          <small>文件先在本地预览，开始识别后才会发送到本机 OCR 服务。</small>
+        </div>
       </div>
     );
+  }
+
+  if (!fileUrl) {
+    return <div className="preview-empty"><strong>正在准备原文预览</strong></div>;
   }
 
   const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");

@@ -13,6 +13,9 @@ const MODE_COPY = {
   invoice: { title: "专业发票 OCR", description: "字段、明细与金额校验" },
 };
 
+const MAX_FILE_BYTES = 20 * 1024 * 1024;
+const SUPPORTED_FILE = /\.(pdf|png|jpe?g)$/i;
+
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState("");
@@ -47,9 +50,23 @@ export default function Home() {
     ),
   ] : [], [result]);
 
-  function chooseFile(event: ChangeEvent<HTMLInputElement>) {
-    setFile(event.target.files?.[0] ?? null);
+  function selectFile(nextFile: File) {
+    if (!SUPPORTED_FILE.test(nextFile.name)) {
+      setError("仅支持 PDF、JPG、JPEG 和 PNG 文件。");
+      return;
+    }
+    if (nextFile.size > MAX_FILE_BYTES) {
+      setError("文件不能超过 20 MB。");
+      return;
+    }
+    setFile(nextFile);
     setResult(null); setSelectedBlock(null); setPage(1); setError("");
+  }
+
+  function chooseFile(event: ChangeEvent<HTMLInputElement>) {
+    const selected = event.target.files?.[0];
+    if (selected) selectFile(selected);
+    event.target.value = "";
   }
 
   async function runOcr() {
@@ -137,7 +154,7 @@ export default function Home() {
       {error && <p className="error-banner">{error}</p>}
 
       <section className="comparison-workspace">
-        <DocumentPreview file={file} fileUrl={fileUrl} page={page} pageInfo={result?.pages.find((item) => item.page === page)} selectedBlock={selectedBlock} />
+        <DocumentPreview file={file} fileUrl={fileUrl} page={page} pageInfo={result?.pages.find((item) => item.page === page)} selectedBlock={selectedBlock} onFileSelect={selectFile} />
         <div className="result-panel">
           <div className="panel-title result-title">
             <div><span className="kicker">识别结果</span><strong>{result ? MODE_COPY[result.schema_name].title : "等待识别"}</strong></div>
