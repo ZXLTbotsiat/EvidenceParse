@@ -118,9 +118,11 @@ members are expanded in memory and are protected by path, file-count,
 uncompressed-size, compression-ratio, encryption, and symbolic-link checks.
 Unsupported archive metadata and non-document files are ignored. Batch status
 and document references are persisted, while source bytes are discarded after
-processing. The current executor runs inside the API process; a restart-safe
-external queue belongs to deployment hardening rather than this local-first
-release.
+processing. When a user opens a completed ZIP item, the browser extracts only
+that bounded member from the locally selected archive so the source and OCR can
+still be compared without server-side document retention. The current executor
+runs inside the API process; a restart-safe external queue belongs to deployment
+hardening rather than this local-first release.
 
 Run tests:
 

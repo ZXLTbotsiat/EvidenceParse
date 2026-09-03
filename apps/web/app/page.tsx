@@ -7,6 +7,7 @@ import { OcrResults } from "../components/ocr-results";
 import { ReviewWorkbench } from "../components/review-workbench";
 import { StructuredResults } from "../components/structured-results";
 import { approveDocument, correctField, createBatch, fetchBatch, fetchDocument, fetchReviewEvents, parseDocument } from "../lib/api";
+import { extractArchiveMember } from "../lib/archive";
 import type { BatchItem, BatchJob, Evidence, OcrMode, OcrTextBlock, ParseResult, ReviewEvent } from "../lib/types";
 
 const MODE_COPY = {
@@ -143,9 +144,12 @@ export default function Home() {
     setOpeningItemId(item.item_id); setError("");
     try {
       const payload = await fetchDocument(item.document_id, apiKey);
+      let previewFile = selectedFiles.find((candidate) => candidate.name === item.filename) ?? null;
+      const archive = selectedFiles.length === 1 && selectedFiles[0].name.toLowerCase().endsWith(".zip") ? selectedFiles[0] : null;
+      if (!previewFile && archive) previewFile = await extractArchiveMember(archive, item.filename);
       setResult(payload); setViewingBatchItem(true);
       setResultTab(payload.schema_name === "invoice" ? "professional" : "ocr");
-      setFile(selectedFiles.find((candidate) => candidate.name === item.filename) ?? null);
+      setFile(previewFile);
       setPage(1); setSelectedBlock(null); setEvents([]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "无法打开批次结果。");
