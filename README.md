@@ -96,6 +96,12 @@ and [`docs/images/README.md`](docs/images/README.md).
   the same auditable OCR result.
 - **Source comparison** — click an OCR result to open the matching page, scroll
   to the original location, and highlight the source region.
+- **Adaptive preprocessing** — compare orientation, deskew, denoised contrast,
+  and binarized candidates per page, then keep the OCR result with the strongest
+  confidence and text coverage.
+- **Inspectable OCR input** — keep the source document as the default comparison
+  view, with an optional button that recreates the exact transient image selected
+  for recognition.
 - **Batch processing** — upload multiple documents or a ZIP archive and inspect
   progress and results per file.
 - **Five interface languages** — switch the complete review workspace between
@@ -141,7 +147,9 @@ before the API starts.
 2. Select **General OCR** or **Professional Invoice OCR**.
 3. Start recognition and wait for the document or batch to complete.
 4. Click any OCR text block to locate and highlight it in the original file.
-5. For invoice results, review extracted fields, validations, and audit history.
+5. Select **View OCR input** to inspect the chosen intermediate image, then return
+   to the untouched source with one click.
+6. For invoice results, review extracted fields, validations, and audit history.
 
 ZIP members are expanded in memory and are never written to a temporary
 directory. When a result is opened, the browser extracts only the selected ZIP
@@ -360,6 +368,8 @@ and [`benchmarks/README.md`](benchmarks/README.md).
 ## Security and data handling
 
 - OCR and PDF preview rendering run on the self-hosted API.
+- OCR input previews are deterministically regenerated from the selected recipe;
+  intermediate images are not stored in the database.
 - Source bytes are transient unless a separate retention mechanism is added by
   the operator.
 - Low-confidence or missing values remain visible for review; they are not

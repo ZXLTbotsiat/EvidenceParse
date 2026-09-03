@@ -1,14 +1,21 @@
 import hashlib
 import uuid
+from dataclasses import replace
 from typing import List, Optional
 
 import fitz
 from PIL import UnidentifiedImageError
 
 from evidence_parse.extractors.pdf import PdfTextExtractor, TextSpan
-from evidence_parse.models import DocumentParseResult, OcrTextBlock, PageContent, SourceKind
+from evidence_parse.models import (
+    DocumentParseResult,
+    OcrTextBlock,
+    PageContent,
+    PreprocessingPage,
+    SourceKind,
+)
 from evidence_parse.ocr import OcrProvider, PreparedImage, RapidOcrProvider
-from evidence_parse.ocr.preprocessing import ImagePreprocessor, ScannedPdfRenderer
+from evidence_parse.ocr.preprocessing import ImageCandidate, ImagePreprocessor, ScannedPdfRenderer
 from evidence_parse.schemas import (
     DocumentSchema,
     GenericOcrSchema,
@@ -106,7 +113,25 @@ class DocumentParser:
         prepared_pages: List[PreparedImage],
         schema: DocumentSchema,
     ) -> DocumentParseResult:
-        pages, spans = self.ocr_provider.extract(prepared_pages)
+        pages: List[PageContent] = []
+        spans: List[TextSpan] = []
+        preprocessing: List[PreprocessingPage] = []
+        for prepared_page in prepared_pages:
+            page_contents, page_spans, selected, average_confidence = self._recognize_best(
+                prepared_page
+            )
+            pages.extend(page_contents)
+            spans.extend(page_spans)
+            preprocessing.append(
+                PreprocessingPage(
+                    page=prepared_page.page,
+                    variant=selected.variant,
+                    rotation_degrees=selected.prepared.rotation_degrees,
+                    deskew_degrees=selected.prepared.deskew_degrees,
+                    average_confidence=average_confidence,
+                    candidate_count=7,
+                )
+            )
         result = self._build_result(
             document_id=document_id,
             fingerprint=fingerprint,
@@ -116,12 +141,92 @@ class DocumentParser:
             pages=pages,
             spans=spans,
             schema=schema,
+            preprocessing=preprocessing,
         )
         if not spans:
             result.warnings.insert(
                 0, "OCR produced no text; all missing values require human review."
             )
         return result
+
+    def _recognize_best(
+        self, source: PreparedImage
+    ) -> tuple[List[PageContent], List[TextSpan], ImageCandidate, float]:
+        """Select orientation and pixels by OCR quality, preserving the original source."""
+
+        orientation_results = []
+        for candidate in self.image_preprocessor.orientation_candidates(source):
+            # Orientation selection needs boxes in candidate-image coordinates.
+            # Source mapping is applied only after the winning orientation is known.
+            image = candidate.prepared.image
+            scoring_image = replace(
+                candidate.prepared,
+                source_width=float(image.width),
+                source_height=float(image.height),
+                source_pixel_width=float(image.width),
+                source_pixel_height=float(image.height),
+                rotation_degrees=0,
+                deskew_degrees=0,
+            )
+            orientation_results.append(
+                (candidate, *self.ocr_provider.extract([scoring_image]))
+            )
+        best_orientation = max(
+            orientation_results,
+            key=lambda item: self._orientation_score(item[2]),
+        )[0].prepared.rotation_degrees
+
+        candidates = self.image_preprocessor.recognition_candidates(source, best_orientation)
+        evaluated = [
+            (candidate, *self.ocr_provider.extract([candidate.prepared]))
+            for candidate in candidates
+        ]
+        selected = evaluated[0]
+        selected_score = self._recognition_score(selected[2])
+        # Keep the least transformed candidate unless another view wins clearly.
+        for candidate_result in evaluated[1:]:
+            score = self._recognition_score(candidate_result[2])
+            if score > selected_score + 0.01:
+                selected = candidate_result
+                selected_score = score
+        candidate, pages, spans = selected
+        average_confidence = (
+            round(sum(span.confidence for span in spans) / len(spans), 4) if spans else 0
+        )
+        return pages, spans, candidate, average_confidence
+
+    @staticmethod
+    def _recognition_score(spans: List[TextSpan]) -> float:
+        if not spans:
+            return 0
+        character_count = sum(max(len("".join(span.text.split())), 1) for span in spans)
+        confidence = sum(
+            span.confidence * max(len("".join(span.text.split())), 1) for span in spans
+        ) / character_count
+        coverage_bonus = min(character_count / 100, 1) * 0.03
+        region_bonus = min(len(spans) / 10, 1) * 0.02
+        return confidence + coverage_bonus + region_bonus
+
+    @classmethod
+    def _orientation_score(cls, spans: List[TextSpan]) -> float:
+        """Prefer confident text arranged as horizontal, top-to-bottom lines."""
+
+        if not spans:
+            return 0
+        weights = [max(len("".join(span.text.split())), 1) for span in spans]
+        horizontal = sum(
+            weight
+            for span, weight in zip(spans, weights)
+            if (span.bbox.x1 - span.bbox.x0) >= (span.bbox.y1 - span.bbox.y0) * 1.4
+        ) / sum(weights)
+        ordered_pairs = list(zip(spans, spans[1:]))
+        reading_order = (
+            sum(current.bbox.y0 <= following.bbox.y0 + 2 for current, following in ordered_pairs)
+            / len(ordered_pairs)
+            if ordered_pairs
+            else 1
+        )
+        return cls._recognition_score(spans) + horizontal * 0.2 + reading_order * 0.05
 
     @staticmethod
     def _build_result(
@@ -133,6 +238,7 @@ class DocumentParser:
         pages: List[PageContent],
         spans: List[TextSpan],
         schema: DocumentSchema,
+        preprocessing: Optional[List[PreprocessingPage]] = None,
     ) -> DocumentParseResult:
         extraction = schema.extract(pages, spans)
         return DocumentParseResult(
@@ -153,6 +259,7 @@ class DocumentParser:
                 )
                 for span in spans
             ],
+            preprocessing=preprocessing or [],
             fields=extraction.fields,
             line_items=extraction.line_items,
             validations=extraction.validations,

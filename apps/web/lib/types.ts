@@ -11,6 +11,15 @@ export type OcrTextBlock = {
 
 export type PageContent = { page: number; width: number; height: number; text: string };
 
+export type PreprocessingPage = {
+  page: number;
+  variant: "original" | "enhanced" | "binary";
+  rotation_degrees: number;
+  deskew_degrees: number;
+  average_confidence: number;
+  candidate_count: number;
+};
+
 export type FieldResult = {
   value?: string | null;
   confidence: number;
@@ -38,6 +47,7 @@ export type ParseResult = {
   page_count: number;
   pages: PageContent[];
   text_blocks: OcrTextBlock[];
+  preprocessing: PreprocessingPage[];
   fields: Record<string, FieldResult>;
   line_items: LineItem[];
   validations: { code: string; passed?: boolean | null; message: string }[];

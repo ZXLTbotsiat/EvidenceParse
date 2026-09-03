@@ -1,9 +1,16 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useCallback, useEffect, useRef, useState } from "react";
-import { renderPdfPage } from "../lib/api";
+import { renderOcrPage, renderPdfPage } from "../lib/api";
 import { useI18n } from "../lib/i18n";
-import type { OcrTextBlock, PageContent } from "../lib/types";
+import type { MessageKey } from "../lib/i18n-catalog";
+import type { OcrTextBlock, PageContent, PreprocessingPage } from "../lib/types";
+
+const VARIANT_KEYS: Record<PreprocessingPage["variant"], MessageKey> = {
+  original: "preview.variant.original",
+  enhanced: "preview.variant.enhanced",
+  binary: "preview.variant.binary",
+};
 
 type Props = {
   file: File | null;
@@ -11,11 +18,12 @@ type Props = {
   page: number;
   pageInfo?: PageContent;
   selectedBlock?: OcrTextBlock | null;
+  preprocessing?: PreprocessingPage;
   apiKey: string;
   onFilesSelect: (files: File[]) => void;
 };
 
-export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, apiKey, onFilesSelect }: Props) {
+export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, preprocessing, apiKey, onFilesSelect }: Props) {
   const { t } = useI18n();
   const canvasRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLSpanElement>(null);
@@ -23,6 +31,9 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
   const [stageSize, setStageSize] = useState<{ width: number; height: number } | null>(null);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState("");
   const [pdfError, setPdfError] = useState("");
+  const [ocrPreviewUrl, setOcrPreviewUrl] = useState("");
+  const [ocrPreviewError, setOcrPreviewError] = useState("");
+  const [previewMode, setPreviewMode] = useState<"source" | "ocr">("source");
   const [dragActive, setDragActive] = useState(false);
   const isPdf = Boolean(file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")));
 
@@ -51,7 +62,8 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
   useEffect(() => {
     setImageSize({ width: 0, height: 0 });
     setStageSize(null);
-  }, [fileUrl]);
+    setPreviewMode("source");
+  }, [fileUrl, page]);
 
   useEffect(() => {
     if (!isPdf || !file) {
@@ -82,6 +94,31 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [apiKey, file, isPdf, page, t]);
+
+  useEffect(() => {
+    if (previewMode !== "ocr" || !file || !preprocessing) return;
+    let cancelled = false;
+    let previewUrl = "";
+
+    async function loadOcrPreview() {
+      try {
+        setOcrPreviewUrl("");
+        setOcrPreviewError("");
+        const preview = await renderOcrPage(file!, preprocessing!, apiKey);
+        if (cancelled) return;
+        previewUrl = URL.createObjectURL(preview);
+        setOcrPreviewUrl(previewUrl);
+      } catch {
+        if (!cancelled) setOcrPreviewError(t("preview.ocrError"));
+      }
+    }
+
+    void loadOcrPreview();
+    return () => {
+      cancelled = true;
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [apiKey, file, preprocessing, previewMode, t]);
 
   useEffect(() => {
     if (!selectedBlock || !stageSize) return;
@@ -150,11 +187,37 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
   return (
     <div className="document-preview">
       <div className="panel-title">
-        <div><span className="kicker">{t("preview.original")}</span><strong title={file.name}>{file.name}</strong></div>
-        <span className="page-badge">{t("preview.page", { page })}</span>
+        <div><span className="kicker">{t(previewMode === "ocr" ? "preview.ocrView" : "preview.original")}</span><strong title={file.name}>{file.name}</strong></div>
+        <div className="preview-heading-actions">
+          {preprocessing && (
+            <button
+              className={`ocr-preview-toggle ${previewMode === "ocr" ? "active" : ""}`}
+              onClick={() => setPreviewMode((current) => current === "source" ? "ocr" : "source")}
+            >
+              {previewMode === "ocr" ? t("preview.showOriginal") : t("preview.showOcrInput")}
+            </button>
+          )}
+          <span className="page-badge">{t("preview.page", { page })}</span>
+        </div>
       </div>
       <div className="preview-canvas" ref={canvasRef}>
-        {isPdf ? (
+        {previewMode === "ocr" ? (
+          ocrPreviewError ? <div className="preview-load-state">{ocrPreviewError}</div> : (
+            ocrPreviewUrl ? (
+              <div className="document-stage image-stage ocr-input-stage" style={stageSize ?? undefined}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={ocrPreviewUrl}
+                  alt={t("preview.ocrAlt", { page })}
+                  onLoad={(event) => setImageSize({
+                    width: event.currentTarget.naturalWidth,
+                    height: event.currentTarget.naturalHeight,
+                  })}
+                />
+              </div>
+            ) : <span className="pdf-loading-inline">{t("preview.ocrRendering")}</span>
+          )
+        ) : isPdf ? (
           pdfError ? <div className="preview-load-state">{pdfError}</div> : (
             pdfPreviewUrl ? (
               <div className="document-stage image-stage" style={stageSize ?? undefined}>
@@ -191,6 +254,16 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
           </div>
         )}
       </div>
+      {previewMode === "ocr" && preprocessing && (
+        <div className="preprocessing-note">
+          <div><span>{t("preview.ocrView")}</span><strong>{t(VARIANT_KEYS[preprocessing.variant])}</strong></div>
+          <small>{t("preview.recipe", {
+            rotation: preprocessing.rotation_degrees,
+            deskew: preprocessing.deskew_degrees.toFixed(1),
+            confidence: Math.round(preprocessing.average_confidence * 100),
+          })}</small>
+        </div>
+      )}
       {selectedBlock && (
         <div className="selected-evidence">
           <span>{t("preview.current")}</span><strong>{selectedBlock.text}</strong>

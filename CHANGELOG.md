@@ -6,6 +6,11 @@ All notable changes to EvidenceParse are documented here.
 
 ### Added
 
+- Added adaptive per-page OCR preprocessing with automatic right-angle orientation,
+  small-angle deskew, denoised contrast, and Otsu binarization candidates.
+- Added a five-language **View OCR input** interaction that temporarily shows the
+  exact selected intermediate image while keeping the original source as default.
+- Added persisted preprocessing recipes and a transient, no-store preview endpoint.
 - Added a persistent whole-interface language switcher for English, Simplified Chinese, Japanese, German, and French.
 - Added real difficult-document showcases for skewed two-column scans, noisy typewriter text, illustrated old pages, and a clearly labelled synthetic handwritten-style note, including fixture provenance.
 - Added real product screenshots for source traceability, batch processing, and responsive review to the GitHub README.

@@ -1,4 +1,4 @@
-import type { BatchJob, ParseResult, ReviewEvent } from "./types";
+import type { BatchJob, ParseResult, PreprocessingPage, ReviewEvent } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -31,6 +31,27 @@ export async function renderPdfPage(file: File, page: number, apiKey: string) {
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
     throw new Error(payload.detail ?? "PDF 原文预览失败。");
+  }
+  return response.blob();
+}
+
+export async function renderOcrPage(
+  file: File,
+  recipe: PreprocessingPage,
+  apiKey: string,
+) {
+  const body = new FormData();
+  body.append("file", file);
+  body.append("page", String(recipe.page));
+  body.append("variant", recipe.variant);
+  body.append("rotation_degrees", String(recipe.rotation_degrees));
+  body.append("deskew_degrees", String(recipe.deskew_degrees));
+  const response = await fetch(`${API_URL}/api/v1/previews/ocr-page`, {
+    method: "POST", headers: headers(apiKey), body,
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail ?? "OCR input preview failed.");
   }
   return response.blob();
 }

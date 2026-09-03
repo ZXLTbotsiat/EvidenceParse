@@ -1,5 +1,8 @@
+import io
+
 import fitz
 from fastapi.testclient import TestClient
+from PIL import Image
 
 
 def _invoice_pdf() -> bytes:
@@ -59,6 +62,26 @@ def test_pdf_page_preview_rejects_out_of_range_page(client: TestClient) -> None:
 
     assert response.status_code == 422
     assert response.json()["detail"] == "PDF page must be between 1 and 1."
+
+
+def test_ocr_input_preview_returns_transient_png(client: TestClient) -> None:
+    output = io.BytesIO()
+    Image.new("RGB", (120, 80), "white").save(output, format="PNG")
+    response = client.post(
+        "/api/v1/previews/ocr-page",
+        data={
+            "page": "1",
+            "variant": "binary",
+            "rotation_degrees": "90",
+            "deskew_degrees": "1.5",
+        },
+        files={"file": ("scan.png", output.getvalue(), "image/png")},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/png"
+    assert response.headers["cache-control"] == "no-store"
+    assert response.content.startswith(b"\x89PNG\r\n\x1a\n")
 
 
 def test_generic_ocr_returns_text_without_professional_fields(client: TestClient) -> None:

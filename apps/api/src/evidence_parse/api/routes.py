@@ -30,7 +30,12 @@ from evidence_parse.api.models import (
     ReviewDecisionRequest,
     ReviewEvent,
 )
-from evidence_parse.api.previews import PdfPreviewError, render_pdf_page
+from evidence_parse.api.previews import (
+    OcrPreviewError,
+    PdfPreviewError,
+    render_ocr_input,
+    render_pdf_page,
+)
 from evidence_parse.api.security import require_api_key
 from evidence_parse.application import (
     BatchApplicationService,
@@ -70,6 +75,40 @@ async def preview_pdf_page(
         png = await run_in_threadpool(render_pdf_page, content, page)
         return Response(content=png, media_type="image/png")
     except PdfPreviewError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post("/previews/ocr-page", response_class=Response)
+async def preview_ocr_page(
+    file: UploadFile = File(...),
+    page: int = Form(1, ge=1),
+    variant: str = Form(...),
+    rotation_degrees: int = Form(0),
+    deskew_degrees: float = Form(0),
+) -> Response:
+    """Reproduce one selected, transient OCR input without replacing the source."""
+
+    content = await file.read()
+    max_bytes = int(os.getenv("EVIDENCE_PARSE_MAX_UPLOAD_MB", "20")) * 1024 * 1024
+    filename = file.filename or "document"
+    if not content:
+        raise HTTPException(status_code=400, detail="The uploaded file is empty.")
+    if len(content) > max_bytes:
+        raise HTTPException(status_code=413, detail="The uploaded file exceeds the size limit.")
+    if not filename.lower().endswith((".pdf", ".png", ".jpg", ".jpeg")):
+        raise HTTPException(status_code=415, detail="OCR preview supports PDF, JPG, and PNG.")
+    try:
+        png = await run_in_threadpool(
+            render_ocr_input,
+            content,
+            filename,
+            page,
+            variant,
+            rotation_degrees,
+            deskew_degrees,
+        )
+        return Response(content=png, media_type="image/png")
+    except OcrPreviewError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 

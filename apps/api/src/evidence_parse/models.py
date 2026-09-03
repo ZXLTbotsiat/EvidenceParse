@@ -107,6 +107,17 @@ class OcrTextBlock(BaseModel):
     confidence: float = Field(ge=0, le=1)
 
 
+class PreprocessingPage(BaseModel):
+    """The reproducible image recipe selected for one OCR page."""
+
+    page: int = Field(ge=1)
+    variant: str
+    rotation_degrees: int = 0
+    deskew_degrees: float = 0
+    average_confidence: float = Field(default=0, ge=0, le=1)
+    candidate_count: int = Field(default=1, ge=1)
+
+
 class DocumentParseResult(BaseModel):
     document_id: str
     content_fingerprint: str
@@ -117,6 +128,7 @@ class DocumentParseResult(BaseModel):
     page_count: int
     pages: List[PageContent] = Field(default_factory=list)
     text_blocks: List[OcrTextBlock] = Field(default_factory=list)
+    preprocessing: List[PreprocessingPage] = Field(default_factory=list)
     fields: Dict[str, ExtractedValue]
     line_items: List[InvoiceLineItem] = Field(default_factory=list)
     validations: List[ValidationResult] = Field(default_factory=list)
