@@ -1,4 +1,4 @@
-import type { ParseResult, ReviewEvent } from "./types";
+import type { BatchJob, ParseResult, ReviewEvent } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -18,6 +18,27 @@ export async function parseDocument(file: File, schema: string, apiKey: string) 
   body.append("schema", schema);
   return readPayload<ParseResult>(await fetch(`${API_URL}/api/v1/documents/parse`, {
     method: "POST", headers: headers(apiKey), body,
+  }));
+}
+
+export async function createBatch(files: File[], schema: string, apiKey: string) {
+  const body = new FormData();
+  files.forEach((file) => body.append("files", file));
+  body.append("schema", schema);
+  return readPayload<BatchJob>(await fetch(`${API_URL}/api/v1/batches`, {
+    method: "POST", headers: headers(apiKey), body,
+  }));
+}
+
+export async function fetchBatch(batchId: string, apiKey: string) {
+  return readPayload<BatchJob>(await fetch(`${API_URL}/api/v1/batches/${batchId}`, {
+    headers: headers(apiKey),
+  }));
+}
+
+export async function fetchDocument(documentId: string, apiKey: string) {
+  return readPayload<ParseResult>(await fetch(`${API_URL}/api/v1/documents/${documentId}`, {
+    headers: headers(apiKey),
   }));
 }
 

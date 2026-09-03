@@ -12,7 +12,7 @@ plus durable duplicate detection and an audited human-review workflow.
 
 ## What works today
 
-- `PDF`, `JPG`, `JPEG`, and `PNG` upload contract
+- `PDF`, `JPG`, `JPEG`, `PNG`, and ZIP batch upload contract
 - generic OCR with ordered text blocks, source coordinates, and confidence
 - professional invoice OCR layered on the same raw-text result
 - digital-versus-scanned PDF detection
@@ -29,7 +29,7 @@ plus durable duplicate detection and an audited human-review workflow.
 - revision-protected field corrections with original-value preservation
 - deterministic revalidation, review decisions, and immutable audit events
 - document listing and review-status filtering
-- bounded multi-file batch jobs with persistent item-level status
+- bounded multi-file and ZIP batch jobs with persistent item-level status
 - reproducible JSON and Markdown benchmark reports
 - optional API key protection and documented key rotation
 - liveness/readiness probes, defensive headers, and non-root containers
@@ -113,11 +113,14 @@ Local execution defaults to `data/evidence_parse.db`. For PostgreSQL, set
 and run `alembic upgrade head` before starting the API. See `.env.example` for
 the supported configuration names.
 
-Batch uploads are bounded by file count, per-file size, and total request size.
-Their status and document references are persisted, while source bytes remain
-in memory only and are discarded after processing. The current executor runs
-inside the API process; a restart-safe external queue belongs to deployment
-hardening rather than this local-first release.
+Batch uploads accept either multiple ordinary documents or ZIP archives. ZIP
+members are expanded in memory and are protected by path, file-count,
+uncompressed-size, compression-ratio, encryption, and symbolic-link checks.
+Unsupported archive metadata and non-document files are ignored. Batch status
+and document references are persisted, while source bytes are discarded after
+processing. The current executor runs inside the API process; a restart-safe
+external queue belongs to deployment hardening rather than this local-first
+release.
 
 Run tests:
 
@@ -136,6 +139,13 @@ running the suite.
 ```bash
 curl -F "file=@invoice.pdf" -F "schema=invoice" \
   http://localhost:8000/api/v1/documents/parse
+```
+
+Create a batch from a ZIP archive:
+
+```bash
+curl -F "files=@documents.zip;type=application/zip" -F "schema=generic" \
+  http://localhost:8000/api/v1/batches
 ```
 
 The response includes raw pages and ordered text blocks with coordinates and

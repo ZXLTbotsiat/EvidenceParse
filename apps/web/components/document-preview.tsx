@@ -9,10 +9,10 @@ type Props = {
   page: number;
   pageInfo?: PageContent;
   selectedBlock?: OcrTextBlock | null;
-  onFileSelect: (file: File) => void;
+  onFilesSelect: (files: File[]) => void;
 };
 
-export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, onFileSelect }: Props) {
+export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, onFilesSelect }: Props) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [stageSize, setStageSize] = useState<{ width: number; height: number } | null>(null);
@@ -42,16 +42,16 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
   }, [fileUrl]);
 
   function acceptInput(event: ChangeEvent<HTMLInputElement>) {
-    const selected = event.currentTarget.files?.[0];
-    if (selected) onFileSelect(selected);
+    const selected = Array.from(event.currentTarget.files ?? []);
+    if (selected.length) onFilesSelect(selected);
     event.currentTarget.value = "";
   }
 
   function acceptDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setDragActive(false);
-    const dropped = event.dataTransfer.files[0];
-    if (dropped) onFileSelect(dropped);
+    const dropped = Array.from(event.dataTransfer.files);
+    if (dropped.length) onFilesSelect(dropped);
   }
 
   if (!file) {
@@ -67,7 +67,8 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
           id="source-drop-input"
           className="drop-input"
           type="file"
-          accept=".pdf,.png,.jpg,.jpeg"
+          accept=".pdf,.png,.jpg,.jpeg,.zip"
+          multiple
           onChange={acceptInput}
           aria-label="拖拽或点击上传文件"
         />
@@ -77,7 +78,7 @@ export function DocumentPreview({ file, fileUrl, page, pageInfo, selectedBlock, 
         >
           <span className="drop-icon">↑</span>
           <strong>{dragActive ? "松开即可预览" : "拖拽文件到这里"}</strong>
-          <p>也可以点击选择 PDF、JPG 或 PNG，最大 20 MB</p>
+          <p>也可以点击选择多个文档或 ZIP 压缩包</p>
           <small>文件先在本地预览，开始识别后才会发送到本机 OCR 服务。</small>
         </div>
       </div>

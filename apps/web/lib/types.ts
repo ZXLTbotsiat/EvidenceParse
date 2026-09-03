@@ -60,3 +60,29 @@ export type ReviewEvent = {
 };
 
 export type OcrMode = "generic" | "invoice";
+
+export type BatchItemStatus = "pending" | "processing" | "completed" | "failed";
+export type BatchStatus = "queued" | "running" | "completed" | "partial_failure" | "failed";
+
+export type BatchItem = {
+  item_id: string;
+  position: number;
+  filename: string;
+  content_type: string;
+  status: BatchItemStatus;
+  document_id?: string | null;
+  error?: string | null;
+};
+
+export type BatchJob = {
+  batch_id: string;
+  schema_name: OcrMode;
+  status: BatchStatus;
+  total_items: number;
+  completed_items: number;
+  failed_items: number;
+  created_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+  items: BatchItem[];
+};

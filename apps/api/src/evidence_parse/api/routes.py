@@ -13,6 +13,13 @@ from fastapi import (
 )
 from starlette.concurrency import run_in_threadpool
 
+from evidence_parse.api.batch_uploads import (
+    BatchUploadError,
+    BatchUploadLimits,
+    expand_batch_uploads,
+    is_zip_upload,
+    normalized_content_type,
+)
 from evidence_parse.api.dependencies import batch_service, document_service
 from evidence_parse.api.models import (
     BatchJobResponse,
@@ -51,33 +58,47 @@ async def create_batch(
     max_files = int(os.getenv("EVIDENCE_PARSE_MAX_BATCH_FILES", "20"))
     max_file_bytes = int(os.getenv("EVIDENCE_PARSE_MAX_UPLOAD_MB", "20")) * 1024 * 1024
     max_batch_bytes = int(os.getenv("EVIDENCE_PARSE_MAX_BATCH_MB", "100")) * 1024 * 1024
+    limits = BatchUploadLimits(
+        max_files=max_files,
+        max_file_bytes=max_file_bytes,
+        max_batch_bytes=max_batch_bytes,
+        max_archive_entries=int(os.getenv("EVIDENCE_PARSE_MAX_ARCHIVE_ENTRIES", "100")),
+        max_compression_ratio=int(os.getenv("EVIDENCE_PARSE_MAX_ZIP_RATIO", "200")),
+    )
     if len(files) > max_files:
         raise HTTPException(
             status_code=413,
             detail=f"A batch can contain at most {max_files} files.",
         )
 
-    buffered_files = []
-    total_bytes = 0
+    buffered_uploads = []
+    uploaded_bytes = 0
     for file in files:
         content = await file.read()
+        filename = file.filename or "document"
         if not content:
-            raise HTTPException(status_code=400, detail=f"{file.filename or 'A file'} is empty.")
-        if len(content) > max_file_bytes:
+            raise HTTPException(status_code=400, detail=f"{filename} is empty.")
+        upload_limit = max_batch_bytes if is_zip_upload(filename) else max_file_bytes
+        if len(content) > upload_limit:
             raise HTTPException(
                 status_code=413,
-                detail=f"{file.filename or 'A file'} exceeds the per-file size limit.",
+                detail=f"{filename} exceeds the upload size limit.",
             )
-        total_bytes += len(content)
-        buffered_files.append(
+        uploaded_bytes += len(content)
+        if uploaded_bytes > max_batch_bytes:
+            raise HTTPException(status_code=413, detail="The batch exceeds the total size limit.")
+        buffered_uploads.append(
             (
-                file.filename or "document",
-                file.content_type or "application/octet-stream",
+                filename,
+                normalized_content_type(filename, file.content_type or ""),
                 content,
             )
         )
-    if total_bytes > max_batch_bytes:
-        raise HTTPException(status_code=413, detail="The batch exceeds the total size limit.")
+
+    try:
+        buffered_files = await run_in_threadpool(expand_batch_uploads, buffered_uploads, limits)
+    except BatchUploadError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
     try:
         record, sources = await run_in_threadpool(service.create, buffered_files, schema_name)

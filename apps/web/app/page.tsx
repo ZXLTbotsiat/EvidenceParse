@@ -1,12 +1,13 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { BatchResults, BatchSourcePreview } from "../components/batch-workbench";
 import { DocumentPreview } from "../components/document-preview";
 import { OcrResults } from "../components/ocr-results";
 import { ReviewWorkbench } from "../components/review-workbench";
 import { StructuredResults } from "../components/structured-results";
-import { approveDocument, correctField, fetchReviewEvents, parseDocument } from "../lib/api";
-import type { Evidence, OcrMode, OcrTextBlock, ParseResult, ReviewEvent } from "../lib/types";
+import { approveDocument, correctField, createBatch, fetchBatch, fetchDocument, fetchReviewEvents, parseDocument } from "../lib/api";
+import type { BatchItem, BatchJob, Evidence, OcrMode, OcrTextBlock, ParseResult, ReviewEvent } from "../lib/types";
 
 const MODE_COPY = {
   generic: { title: "通用 OCR", description: "逐页文字、位置与置信度" },
@@ -14,10 +15,14 @@ const MODE_COPY = {
 };
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
-const SUPPORTED_FILE = /\.(pdf|png|jpe?g)$/i;
+const MAX_BATCH_BYTES = 100 * 1024 * 1024;
+const MAX_BATCH_FILES = 20;
+const SUPPORTED_FILE = /\.(pdf|png|jpe?g|zip)$/i;
+const TERMINAL_BATCH_STATUSES = new Set(["completed", "partial_failure", "failed"]);
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileUrl, setFileUrl] = useState("");
   const [mode, setMode] = useState<OcrMode>("generic");
   const [result, setResult] = useState<ParseResult | null>(null);
@@ -33,6 +38,9 @@ export default function Home() {
   const [reviewer, setReviewer] = useState("");
   const [reviewReason, setReviewReason] = useState("");
   const [savingReview, setSavingReview] = useState(false);
+  const [batch, setBatch] = useState<BatchJob | null>(null);
+  const [viewingBatchItem, setViewingBatchItem] = useState(false);
+  const [openingItemId, setOpeningItemId] = useState("");
 
   useEffect(() => {
     if (!file) { setFileUrl(""); return; }
@@ -40,6 +48,27 @@ export default function Home() {
     setFileUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+
+  useEffect(() => {
+    const batchId = batch?.batch_id;
+    if (!batchId || (batch && TERMINAL_BATCH_STATUSES.has(batch.status))) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    async function poll() {
+      try {
+        const latest = await fetchBatch(batchId!, apiKey);
+        if (cancelled) return;
+        setBatch(latest);
+        if (!TERMINAL_BATCH_STATUSES.has(latest.status)) timer = setTimeout(poll, 700);
+      } catch (caught) {
+        if (!cancelled) setError(caught instanceof Error ? caught.message : "批次状态查询失败。");
+      }
+    }
+
+    timer = setTimeout(poll, 500);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [batch?.batch_id, apiKey]);
 
   const correctionTargets = useMemo(() => result ? [
     ...Object.entries(result.fields).map(([name, field]) => ({ path: `fields.${name}`, label: name.replaceAll("_", " "), value: field.value ?? "" })),
@@ -50,36 +79,77 @@ export default function Home() {
     ),
   ] : [], [result]);
 
-  function selectFile(nextFile: File) {
-    if (!SUPPORTED_FILE.test(nextFile.name)) {
-      setError("仅支持 PDF、JPG、JPEG 和 PNG 文件。");
+  const isBatchSelection = selectedFiles.length > 1 || Boolean(selectedFiles[0]?.name.toLowerCase().endsWith(".zip"));
+  const batchRunning = batch?.status === "queued" || batch?.status === "running";
+
+  function selectFiles(nextFiles: File[]) {
+    if (!nextFiles.length) return;
+    if (nextFiles.length > MAX_BATCH_FILES) {
+      setError(`一次最多选择 ${MAX_BATCH_FILES} 个文件。`);
       return;
     }
-    if (nextFile.size > MAX_FILE_BYTES) {
-      setError("文件不能超过 20 MB。");
+    const archives = nextFiles.filter((item) => item.name.toLowerCase().endsWith(".zip"));
+    if (archives.length && nextFiles.length > 1) {
+      setError("ZIP 压缩包请单独上传，普通文档可以一次选择多个。");
       return;
     }
-    setFile(nextFile);
+    const unsupported = nextFiles.find((item) => !SUPPORTED_FILE.test(item.name));
+    if (unsupported) {
+      setError(`${unsupported.name} 不受支持，仅支持 PDF、JPG、PNG 和 ZIP。`);
+      return;
+    }
+    const oversized = nextFiles.find((item) => item.size > (item.name.toLowerCase().endsWith(".zip") ? MAX_BATCH_BYTES : MAX_FILE_BYTES));
+    if (oversized) {
+      setError(`${oversized.name} 超过大小限制。单个文档最大 20 MB，ZIP 最大 100 MB。`);
+      return;
+    }
+    if (nextFiles.reduce((total, item) => total + item.size, 0) > MAX_BATCH_BYTES) {
+      setError("本批文件总大小不能超过 100 MB。");
+      return;
+    }
+    const previewFile = nextFiles.length === 1 && !archives.length ? nextFiles[0] : null;
+    setSelectedFiles(nextFiles);
+    setFile(previewFile);
+    setBatch(null); setViewingBatchItem(false); setOpeningItemId("");
     setResult(null); setSelectedBlock(null); setPage(1); setError("");
   }
 
   function chooseFile(event: ChangeEvent<HTMLInputElement>) {
-    const selected = event.target.files?.[0];
-    if (selected) selectFile(selected);
+    const selected = Array.from(event.target.files ?? []);
+    if (selected.length) selectFiles(selected);
     event.target.value = "";
   }
 
   async function runOcr() {
-    if (!file) return;
+    if (!selectedFiles.length) return;
     setLoading(true); setError("");
     try {
-      const payload = await parseDocument(file, mode, apiKey);
-      setResult(payload);
-      setResultTab(mode === "invoice" ? "professional" : "ocr");
-      setPage(1); setSelectedBlock(null); setEvents([]);
+      if (isBatchSelection) {
+        const payload = await createBatch(selectedFiles, mode, apiKey);
+        setBatch(payload); setViewingBatchItem(false); setResult(null);
+      } else if (file) {
+        const payload = await parseDocument(file, mode, apiKey);
+        setResult(payload);
+        setResultTab(mode === "invoice" ? "professional" : "ocr");
+        setPage(1); setSelectedBlock(null); setEvents([]);
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "识别失败，请稍后重试。");
     } finally { setLoading(false); }
+  }
+
+  async function openBatchItem(item: BatchItem) {
+    if (!item.document_id) return;
+    setOpeningItemId(item.item_id); setError("");
+    try {
+      const payload = await fetchDocument(item.document_id, apiKey);
+      setResult(payload); setViewingBatchItem(true);
+      setResultTab(payload.schema_name === "invoice" ? "professional" : "ocr");
+      setFile(selectedFiles.find((candidate) => candidate.name === item.filename) ?? null);
+      setPage(1); setSelectedBlock(null); setEvents([]);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "无法打开批次结果。");
+    } finally { setOpeningItemId(""); }
   }
 
   function selectEvidence(evidence: Evidence) {
@@ -137,30 +207,39 @@ export default function Home() {
 
       <section className="control-bar">
         <label className="file-picker">
-          <input type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={chooseFile} />
-          <span>{file ? "更换文件" : "选择文件"}</span>
-          <strong>{file?.name ?? "支持 PDF、JPG、PNG，最大 20 MB"}</strong>
+          <input type="file" accept=".pdf,.png,.jpg,.jpeg,.zip" multiple disabled={batchRunning} onChange={chooseFile} />
+          <span>{selectedFiles.length ? "更换文件" : "选择文件"}</span>
+          <strong>{selectedFiles.length > 1 ? `已选择 ${selectedFiles.length} 个文件` : selectedFiles[0]?.name ?? "支持多选文档或单个 ZIP"}</strong>
         </label>
         <div className="mode-picker" aria-label="OCR 类型">
           {(Object.keys(MODE_COPY) as OcrMode[]).map((value) => (
-            <button key={value} className={mode === value ? "active" : ""} onClick={() => setMode(value)}>
+            <button key={value} className={mode === value ? "active" : ""} disabled={batchRunning} onClick={() => setMode(value)}>
               <strong>{MODE_COPY[value].title}</strong><small>{MODE_COPY[value].description}</small>
             </button>
           ))}
         </div>
-        <button className="primary-action" disabled={!file || loading} onClick={runOcr}>{loading ? "正在识别…" : "开始识别"}</button>
+        <button className="primary-action" disabled={!selectedFiles.length || loading || batchRunning} onClick={runOcr}>{loading ? "正在创建…" : batchRunning ? "批量识别中…" : isBatchSelection ? "批量识别" : "开始识别"}</button>
       </section>
 
       {error && <p className="error-banner">{error}</p>}
 
       <section className="comparison-workspace">
-        <DocumentPreview file={file} fileUrl={fileUrl} page={page} pageInfo={result?.pages.find((item) => item.page === page)} selectedBlock={selectedBlock} onFileSelect={selectFile} />
+        {isBatchSelection && (!viewingBatchItem || !file) ? (
+          <BatchSourcePreview selectedFiles={selectedFiles} batch={batch} />
+        ) : (
+          <DocumentPreview file={file} fileUrl={fileUrl} page={page} pageInfo={result?.pages.find((item) => item.page === page)} selectedBlock={selectedBlock} onFilesSelect={selectFiles} />
+        )}
         <div className="result-panel">
           <div className="panel-title result-title">
-            <div><span className="kicker">识别结果</span><strong>{result ? MODE_COPY[result.schema_name].title : "等待识别"}</strong></div>
-            {result && <span className="source-badge">{result.source_kind.replaceAll("_", " ")}</span>}
+            <div><span className="kicker">识别结果</span><strong>{isBatchSelection && !viewingBatchItem ? "批量任务" : result ? MODE_COPY[result.schema_name].title : "等待识别"}</strong></div>
+            <div className="result-heading-actions">
+              {isBatchSelection && viewingBatchItem && <button className="batch-back" onClick={() => setViewingBatchItem(false)}>返回批次</button>}
+              {result && (!isBatchSelection || viewingBatchItem) && <span className="source-badge">{result.source_kind.replaceAll("_", " ")}</span>}
+            </div>
           </div>
-          {!result ? (
+          {isBatchSelection && !viewingBatchItem ? (
+            <BatchResults selectedFiles={selectedFiles} batch={batch} openingItemId={openingItemId} onOpen={openBatchItem} />
+          ) : !result ? (
             <div className="result-empty"><span>01</span><p>先在左侧确认文件内容，再选择通用或专业 OCR。</p><span>02</span><p>识别后点击任意文字区域，即可与原文定位对照。</p></div>
           ) : (
             <>
@@ -178,7 +257,7 @@ export default function Home() {
         </div>
       </section>
 
-      {result?.schema_name === "invoice" && <ReviewWorkbench result={result} events={events} targets={correctionTargets}
+      {result?.schema_name === "invoice" && (!isBatchSelection || viewingBatchItem) && <ReviewWorkbench result={result} events={events} targets={correctionTargets}
         correctionPath={correctionPath} correctionValue={correctionValue} reviewer={reviewer} reason={reviewReason} saving={savingReview}
         onPathChange={chooseCorrection} onValueChange={setCorrectionValue} onReviewerChange={setReviewer} onReasonChange={setReviewReason}
         onSave={saveCorrection} onApprove={approveReview} onRefreshEvents={loadEvents} />}

@@ -1,4 +1,6 @@
 import uuid
+from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import fitz
 from fastapi.testclient import TestClient
@@ -20,6 +22,14 @@ def _invoice_pdf() -> bytes:
     content = document.tobytes(no_new_id=True)
     document.close()
     return content
+
+
+def _zip_bytes(files: dict[str, bytes]) -> bytes:
+    stream = BytesIO()
+    with ZipFile(stream, "w", compression=ZIP_DEFLATED) as archive:
+        for filename, content in files.items():
+            archive.writestr(filename, content)
+    return stream.getvalue()
 
 
 def test_batch_tracks_completed_and_failed_items(client: TestClient) -> None:
@@ -61,6 +71,65 @@ def test_batch_reuses_a_canonical_document_for_exact_duplicates(client: TestClie
     assert document_ids[0] == document_ids[1]
     document = client.get(f"/api/v1/documents/{document_ids[0]}").json()
     assert document["duplicate"]["occurrences"] == 2
+
+
+def test_batch_expands_zip_and_ignores_non_document_entries(client: TestClient) -> None:
+    archive = _zip_bytes(
+        {
+            "invoices/first.pdf": _invoice_pdf(),
+            "invoices/second.pdf": _invoice_pdf(),
+            "README.md": b"This entry should not become a batch item.",
+            "__MACOSX/._first.pdf": b"metadata",
+        }
+    )
+
+    response = client.post(
+        "/api/v1/batches",
+        files=[("files", ("documents.zip", archive, "application/zip"))],
+    )
+
+    assert response.status_code == 202
+    batch = client.get(f"/api/v1/batches/{response.json()['batch_id']}").json()
+    assert batch["status"] == "completed"
+    assert batch["total_items"] == 2
+    assert [item["filename"] for item in batch["items"]] == [
+        "invoices/first.pdf",
+        "invoices/second.pdf",
+    ]
+
+
+def test_invalid_zip_is_rejected_before_batch_creation(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/batches",
+        files=[("files", ("documents.zip", b"not-a-zip", "application/zip"))],
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "documents.zip is not a valid ZIP archive."
+
+
+def test_zip_with_parent_path_is_rejected(client: TestClient) -> None:
+    archive = _zip_bytes({"../outside.pdf": _invoice_pdf()})
+
+    response = client.post(
+        "/api/v1/batches",
+        files=[("files", ("unsafe.zip", archive, "application/zip"))],
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "ZIP archive contains an unsafe entry path."
+
+
+def test_zip_compression_ratio_is_bounded(client: TestClient) -> None:
+    archive = _zip_bytes({"oversized.pdf": b"0" * (1024 * 1024)})
+
+    response = client.post(
+        "/api/v1/batches",
+        files=[("files", ("compressed.zip", archive, "application/zip"))],
+    )
+
+    assert response.status_code == 413
+    assert "compression ratio" in response.json()["detail"]
 
 
 def test_batch_file_count_is_bounded(client: TestClient, monkeypatch) -> None:
